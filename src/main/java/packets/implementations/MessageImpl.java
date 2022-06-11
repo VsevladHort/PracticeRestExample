@@ -10,11 +10,11 @@ public class MessageImpl implements Message {
     private int bUserId;
     private byte[] message;
 
-    public MessageImpl(ByteBuffer bytes, int wLen) {
-        cType = bytes.getInt(Constants.OFFSET_MSG + Constants.MSG_OFFSET_C_TYPE);
-        bUserId = bytes.getInt(Constants.OFFSET_MSG + Constants.MSG_OFFSET_B_USER_ID);
+    public MessageImpl(ByteBuffer bytes, int wLen, int startIndex) {
+        cType = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_C_TYPE);
+        bUserId = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_B_USER_ID);
         message = new byte[wLen];
-        bytes.get(Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, message);
+        bytes.get(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, message);
     }
 
     @Override
