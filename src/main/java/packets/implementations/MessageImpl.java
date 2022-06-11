@@ -8,7 +8,7 @@ public class MessageImpl implements Message {
     private byte[] message;
 
     public MessageImpl(byte[] bytes, int offsetToMessage) {
-        
+
     }
 
     @Override
