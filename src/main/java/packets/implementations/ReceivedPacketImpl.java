@@ -7,6 +7,7 @@ import packets.exceptions.DiscardException;
 import packets.utils.abstractions.CRCCalculator;
 import packets.utils.implementations.CRCCalculatorImplementation;
 
+import javax.crypto.Cipher;
 import java.nio.ByteBuffer;
 
 public class ReceivedPacketImpl implements ReceivedPacket {
@@ -18,7 +19,7 @@ public class ReceivedPacketImpl implements ReceivedPacket {
     private final Message message;
     private final short wCrc16n2;
 
-    public ReceivedPacketImpl(byte[] bytes, int startIndex) throws DiscardException {
+    public ReceivedPacketImpl(byte[] bytes, int startIndex, Cipher cipher) throws DiscardException {
         if (bytes[startIndex] != Constants.MAGIC)
             throw new DiscardException("Incorrect magic byte");
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -35,7 +36,7 @@ public class ReceivedPacketImpl implements ReceivedPacket {
                 startIndex + Constants.OFFSET_MSG,
                 Constants.OFFSET_MSG + wLen))
             throw new DiscardException("wCrc16n2 did not match");
-        message = new MessageImpl(buffer, wLen, startIndex);
+        message = new MessageImpl(buffer, wLen, startIndex, cipher);
     }
 
     @Override

@@ -2,19 +2,28 @@ package packets.implementations;
 
 import packets.Constants;
 import packets.abstractions.Message;
+import packets.exceptions.DiscardException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
 
 public class MessageImpl implements Message {
-    private int cType;
-    private int bUserId;
-    private byte[] message;
+    private final int cType;
+    private final int bUserId;
+    private final byte[] message;
 
-    public MessageImpl(ByteBuffer bytes, int wLen, int startIndex) {
+    public MessageImpl(ByteBuffer bytes, int wLen, int startIndex, Cipher cipher) throws DiscardException {
         cType = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_C_TYPE);
         bUserId = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_B_USER_ID);
-        message = new byte[wLen];
-        bytes.get(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, message);
+        byte[] temp = new byte[wLen];
+        bytes.get(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, temp);
+        try {
+            message = cipher.doFinal(temp);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new DiscardException(e.getMessage());
+        }
     }
 
     @Override
