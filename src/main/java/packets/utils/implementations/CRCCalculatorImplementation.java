@@ -2,7 +2,7 @@ package packets.utils.implementations;
 
 import packets.utils.abstractions.CRCCalculator;
 
-public class CRCCalculatorImplementation implements CRCCalculator {
+public final class CRCCalculatorImplementation implements CRCCalculator {
     private static final int[] TABLE = {
             0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
             0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
@@ -37,6 +37,17 @@ public class CRCCalculatorImplementation implements CRCCalculator {
             0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
             0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
     };
+
+    private CRCCalculatorImplementation() {
+    }
+
+    private static CRCCalculator calculator = null;
+
+    public static CRCCalculator provide() {
+        if (calculator == null)
+            calculator = new CRCCalculatorImplementation();
+        return calculator;
+    }
 
     @Override
     public short calculate(byte[] bytes, int start, int end) {
