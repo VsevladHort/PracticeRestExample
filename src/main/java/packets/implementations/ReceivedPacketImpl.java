@@ -2,14 +2,14 @@ package packets.implementations;
 
 import packets.Constants;
 import packets.abstractions.Message;
-import packets.abstractions.Packet;
+import packets.abstractions.ReceivedPacket;
 import packets.exceptions.DiscardException;
 import packets.utils.abstractions.CRCCalculator;
 import packets.utils.implementations.CRCCalculatorImplementation;
 
 import java.nio.ByteBuffer;
 
-public class PacketImpl implements Packet {
+public class ReceivedPacketImpl implements ReceivedPacket {
     private final byte bMagic;
     private final byte bSrc;
     private final long bPktId;
@@ -18,7 +18,7 @@ public class PacketImpl implements Packet {
     private final Message message;
     private final short wCrc16n2;
 
-    public PacketImpl(byte[] bytes, int startIndex) throws DiscardException {
+    public ReceivedPacketImpl(byte[] bytes, int startIndex) throws DiscardException {
         if (bytes[startIndex] != Constants.MAGIC)
             throw new DiscardException("Incorrect magic byte");
         ByteBuffer buffer = ByteBuffer.wrap(bytes);

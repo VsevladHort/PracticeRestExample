@@ -1,6 +1,6 @@
 package packets.abstractions;
 
-public interface Packet {
+public interface ReceivedPacket {
     byte getBMagic();
 
     byte getBSrc();
