@@ -46,4 +46,9 @@ public class CRCCalculatorImplementation implements CRCCalculator {
         }
         return crc;
     }
+
+    @Override
+    public CRCCalculator provide() {
+        return new CRCCalculatorImplementation();
+    }
 }
