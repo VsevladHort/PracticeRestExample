@@ -20,6 +20,8 @@ public class ReceivedPacketImpl implements ReceivedPacket {
     private final short wCrc16n2;
 
     public ReceivedPacketImpl(byte[] bytes, int startIndex, Cipher cipher) throws DiscardException {
+        if (bytes.length < Constants.MIN_LENGTH)
+            throw new DiscardException("Length of the packet less than min required");
         if (bytes[startIndex] != Constants.MAGIC)
             throw new DiscardException("Incorrect magic byte");
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
