@@ -17,7 +17,7 @@ public class MessageImpl implements Message {
     public MessageImpl(ByteBuffer bytes, int wLen, int startIndex, Cipher cipher) throws DiscardException {
         cType = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_C_TYPE);
         bUserId = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_B_USER_ID);
-        byte[] temp = new byte[wLen];
+        byte[] temp = new byte[wLen - Constants.MSG_OFFSET_MESSAGE];
         bytes.get(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, temp);
         try {
             message = cipher.doFinal(temp);
