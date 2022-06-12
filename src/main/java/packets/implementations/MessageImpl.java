@@ -8,6 +8,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
+import java.util.Base64;
 
 public class MessageImpl implements Message {
     private final int cType;
@@ -15,15 +16,19 @@ public class MessageImpl implements Message {
     private final byte[] message;
 
     public MessageImpl(ByteBuffer bytes, int wLen, int startIndex, Cipher cipher) throws DiscardException {
-        cType = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_C_TYPE);
-        bUserId = bytes.getInt(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_B_USER_ID);
-        byte[] temp = new byte[wLen - Constants.MSG_OFFSET_MESSAGE];
-        bytes.get(startIndex + Constants.OFFSET_MSG + Constants.MSG_OFFSET_MESSAGE, temp);
+        byte[] cipheredMessage = new byte[wLen];
+        byte[] decipheredMessage;
+        bytes.get(startIndex + Constants.OFFSET_MSG, cipheredMessage);
         try {
-            message = cipher.doFinal(temp);
+            decipheredMessage = cipher.doFinal(cipheredMessage);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new DiscardException(e.getMessage());
         }
+        bytes = ByteBuffer.wrap(decipheredMessage);
+        cType = bytes.getInt(Constants.MSG_OFFSET_C_TYPE);
+        bUserId = bytes.getInt(Constants.MSG_OFFSET_B_USER_ID);
+        message = new byte[decipheredMessage.length - Constants.MSG_OFFSET_MESSAGE];
+        bytes.get(Constants.MSG_OFFSET_MESSAGE, message);
     }
 
     @Override
