@@ -2,6 +2,8 @@ package packets.utils.implementations;
 
 import packets.utils.abstractions.CRCCalculator;
 
+import java.util.List;
+
 public final class CRCCalculatorImplementation implements CRCCalculator {
     private static final int[] TABLE = {
             0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
@@ -54,6 +56,15 @@ public final class CRCCalculatorImplementation implements CRCCalculator {
         short crc = 0x0000;
         for (int i = start; i < end; i++) {
             crc = (short) ((crc >>> 8) ^ TABLE[(crc ^ bytes[i]) & 0xff]);
+        }
+        return crc;
+    }
+
+    @Override
+    public short calculate(List<Byte> bytes, int start, int end) {
+        short crc = 0x0000;
+        for (int i = start; i < end; i++) {
+            crc = (short) ((crc >>> 8) ^ TABLE[(crc ^ bytes.get(i)) & 0xff]);
         }
         return crc;
     }
