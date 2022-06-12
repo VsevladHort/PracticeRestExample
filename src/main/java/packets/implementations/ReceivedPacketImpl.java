@@ -42,7 +42,9 @@ public class ReceivedPacketImpl implements ReceivedPacket {
         wCrc16n2 = buffer.getShort(startIndex + Constants.OFFSET_MSG + wLen);
         LOGGER.log(Level.INFO, "crc16n2 in receivedPacket from source: " + wCrc16n2);
         LOGGER.log(Level.INFO, "crc16n2 in receivedPacket calculated locally: " +
-                calculator.calculate(bytes, startIndex, Constants.OFFSET_CRC));
+                calculator.calculate(bytes,
+                        startIndex + Constants.OFFSET_MSG,
+                        startIndex + Constants.OFFSET_MSG + wLen));
         if (wCrc16n2 != calculator.calculate(bytes,
                 startIndex + Constants.OFFSET_MSG,
                 Constants.OFFSET_MSG + wLen))
