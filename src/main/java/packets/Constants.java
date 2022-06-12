@@ -4,7 +4,7 @@ public class Constants {
     private Constants() {
     }
 
-    public static final int MAGIC = 0x13;
+    public static final byte MAGIC = 0x13;
     public static final int OFFSET_MAGIC = 0;
     public static final int OFFSET_SRC = 1;
     public static final int OFFSET_PKT_ID = 2;

@@ -8,7 +8,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.nio.ByteBuffer;
-import java.util.Base64;
+import java.util.Arrays;
 
 public class MessageImpl implements Message {
     private final int cType;
