@@ -28,8 +28,16 @@ class PacketTest {
         cipher1.init(Cipher.ENCRYPT_MODE, key);
         cipher2.init(Cipher.DECRYPT_MODE, key);
         MessageWrapper wrapper = new MessageWrapperImpl(CRCCalculatorImplementation.provide());
-        byte[] packet = wrapper.wrap(message.getBytes(StandardCharsets.UTF_8), (byte) 1, 2, 3, 4, cipher1);
+        byte srcId = 1;
+        long pktId = 2;
+        int cType = 3;
+        int bUserId = 4;
+        byte[] packet = wrapper.wrap(message.getBytes(StandardCharsets.UTF_8), srcId, pktId, cType, bUserId, cipher1);
         ReceivedPacket receivedPacket = new ReceivedPacketImpl(packet, 0, cipher2);
         Assertions.assertEquals(message, new String(receivedPacket.getMessage().getMessage(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(srcId, receivedPacket.getBSrc());
+        Assertions.assertEquals(pktId, receivedPacket.getBPktId());
+        Assertions.assertEquals(cType, receivedPacket.getMessage().getCType());
+        Assertions.assertEquals(bUserId, receivedPacket.getMessage().getBUserId());
     }
 }
