@@ -27,27 +27,27 @@ public class MessageWrapperImpl implements MessageWrapper {
         bytes[Constants.OFFSET_SRC] = bSrc;
         currentIndex = Constants.OFFSET_PKT_ID;
         for (int i = Long.BYTES - 1; i >= 0; i--) {
-            bytes[currentIndex] = (byte) ((bPktId >>> i) & 0xff);
+            bytes[currentIndex] = (byte) ((bPktId >>> i * 8) & 0xff);
             currentIndex++;
         }
         for (int i = Integer.BYTES - 1; i >= 0; i--) {
-            bytes[currentIndex] = (byte) ((message.length >>> i) & 0xff);
+            bytes[currentIndex] = (byte) ((message.length >>> i * 8) & 0xff);
             currentIndex++;
         }
         short crc16n1 = calculator.calculate(bytes, 0, currentIndex);
         LOGGER.log(Level.INFO, "crc16n1 in wrapper: " + crc16n1);
         for (int i = Short.BYTES - 1; i >= 0; i--) {
-            bytes[currentIndex] = (byte) ((crc16n1 >>> i) & 0xff);
+            bytes[currentIndex] = (byte) ((crc16n1 >>> i * 8) & 0xff);
             currentIndex++;
         }
         byte[] msgToCipher = new byte[8 + message.length];
         int currentMessageToCipherIndex = 0;
         for (int i = Integer.BYTES - 1; i >= 0; i--) {
-            msgToCipher[currentMessageToCipherIndex] = (byte) ((cType >>> i) & 0xff);
+            msgToCipher[currentMessageToCipherIndex] = (byte) ((cType >>> i * 8) & 0xff);
             currentMessageToCipherIndex++;
         }
         for (int i = Integer.BYTES - 1; i >= 0; i--) {
-            msgToCipher[currentMessageToCipherIndex] = (byte) ((bUserId >>> i) & 0xff);
+            msgToCipher[currentMessageToCipherIndex] = (byte) ((bUserId >>> i * 8) & 0xff);
             currentMessageToCipherIndex++;
         }
         for (byte b : message) {
@@ -68,7 +68,7 @@ public class MessageWrapperImpl implements MessageWrapper {
             short crc16n2 = calculator.calculate(cipheredMessage, 0, cipheredMessage.length);
             LOGGER.log(Level.INFO, "crc16n2 in wrapper: " + crc16n2);
             for (int i = Short.BYTES - 1; i >= 0; i--) {
-                bytes[currentIndex] = (byte) ((crc16n2 >>> i) & 0xff);
+                bytes[currentIndex] = (byte) ((crc16n2 >>> i * 8) & 0xff);
                 currentIndex++;
             }
         }
