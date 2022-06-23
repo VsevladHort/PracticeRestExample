@@ -5,9 +5,9 @@ import packets.abstractions.Message;
 import packets.abstractions.ReceivedPacket;
 import packets.exceptions.DiscardException;
 import packets.utils.abstractions.CRCCalculator;
+import packets.utils.abstractions.Cipherer;
 import packets.utils.implementations.CRCCalculatorImplementation;
 
-import javax.crypto.Cipher;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +22,7 @@ public class ReceivedPacketImpl implements ReceivedPacket {
     private final short wCrc16n2;
     private static final Logger LOGGER = Logger.getLogger(ReceivedPacketImpl.class.getName());
 
-    public ReceivedPacketImpl(byte[] bytes, int startIndex, Cipher cipher) throws DiscardException {
+    public ReceivedPacketImpl(byte[] bytes, int startIndex, Cipherer cipher) throws DiscardException {
         if (bytes.length < Constants.MIN_LENGTH)
             throw new DiscardException("Length of the packet less than min required");
         if (bytes[startIndex] != Constants.MAGIC)

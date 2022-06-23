@@ -2,14 +2,12 @@ package packets.implementations;
 
 import packets.Constants;
 import packets.abstractions.MessageWrapper;
+import packets.exceptions.CipherException;
 import packets.exceptions.DiscardException;
 import packets.utils.abstractions.CRCCalculator;
+import packets.utils.abstractions.Cipherer;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,9 +20,9 @@ public class MessageWrapperImpl implements MessageWrapper {
     }
 
     @Override
-    public byte[] wrap(byte[] message, byte bSrc, long bPktId, int cType, int bUserId, Cipher cipher) throws DiscardException {
+    public byte[] wrap(byte[] message, byte bSrc, long bPktId, int cType, int bUserId, Cipherer cipher) throws DiscardException {
         ArrayList<Byte> bytes = new ArrayList<>();
-        bytes.add((byte) Constants.MAGIC);
+        bytes.add(Constants.MAGIC);
         bytes.add(bSrc);
         for (int i = Long.BYTES - 1; i >= 0; i--) {
             bytes.add((byte) ((bPktId >>> i * 8) & 0xff));
@@ -45,8 +43,8 @@ public class MessageWrapperImpl implements MessageWrapper {
         }
         byte[] cipheredMessage;
         try {
-            cipheredMessage = cipher.doFinal(msgToCipher);
-        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            cipheredMessage = cipher.cipher(msgToCipher);
+        } catch (CipherException e) {
             throw new DiscardException(e.getMessage());
         }
         if (cipheredMessage != null) {

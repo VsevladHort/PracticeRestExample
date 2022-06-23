@@ -6,7 +6,10 @@ import packets.abstractions.ReceivedPacket;
 import packets.exceptions.DiscardException;
 import packets.implementations.MessageWrapperImpl;
 import packets.implementations.ReceivedPacketImpl;
+import packets.utils.abstractions.Cipherer;
 import packets.utils.implementations.CRCCalculatorImplementation;
+import packets.utils.implementations.CiphererCipherImpl;
+import packets.utils.implementations.CiphererSimpleImpl;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -19,6 +22,8 @@ import java.security.NoSuchAlgorithmException;
 class PacketTest {
     private static Cipher cipher1;
     private static Cipher cipher2;
+    private static Cipherer cipherer;
+    private static Cipherer ciphererSimple;
 
     @BeforeAll
     static void init() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
@@ -31,18 +36,37 @@ class PacketTest {
         Key key = new SecretKeySpec(salt, "AES");
         cipher1.init(Cipher.ENCRYPT_MODE, key);
         cipher2.init(Cipher.DECRYPT_MODE, key);
+        cipherer = new CiphererCipherImpl(cipher1, cipher2);
+        ciphererSimple = new CiphererSimpleImpl();
     }
 
     @org.junit.jupiter.api.Test
-    void testWrapperAndReceivedPacketClassInteroperability() throws DiscardException {
+    void testWrapperAndReceivedPacketClassInteroperabilityWithCipherCipherer() throws DiscardException {
         String message = "MESSAGE TO BE PASSED";
         MessageWrapper wrapper = new MessageWrapperImpl(CRCCalculatorImplementation.provide());
         byte srcId = 1;
         long pktId = 2;
         int cType = 3;
         int bUserId = 4;
-        byte[] packet = wrapper.wrap(message.getBytes(StandardCharsets.UTF_8), srcId, pktId, cType, bUserId, cipher1);
-        ReceivedPacket receivedPacket = new ReceivedPacketImpl(packet, 0, cipher2);
+        byte[] packet = wrapper.wrap(message.getBytes(StandardCharsets.UTF_8), srcId, pktId, cType, bUserId, cipherer);
+        ReceivedPacket receivedPacket = new ReceivedPacketImpl(packet, 0, cipherer);
+        Assertions.assertEquals(message, new String(receivedPacket.getMessage().getMessage(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(srcId, receivedPacket.getBSrc());
+        Assertions.assertEquals(pktId, receivedPacket.getBPktId());
+        Assertions.assertEquals(cType, receivedPacket.getMessage().getCType());
+        Assertions.assertEquals(bUserId, receivedPacket.getMessage().getBUserId());
+    }
+
+    @org.junit.jupiter.api.Test
+    void testWrapperAndReceivedPacketClassInteroperabilityWithSimpleCipherer() throws DiscardException {
+        String message = "MESSAGE TO BE PASSED";
+        MessageWrapper wrapper = new MessageWrapperImpl(CRCCalculatorImplementation.provide());
+        byte srcId = 1;
+        long pktId = 2;
+        int cType = 3;
+        int bUserId = 4;
+        byte[] packet = wrapper.wrap(message.getBytes(StandardCharsets.UTF_8), srcId, pktId, cType, bUserId, ciphererSimple);
+        ReceivedPacket receivedPacket = new ReceivedPacketImpl(packet, 0, ciphererSimple);
         Assertions.assertEquals(message, new String(receivedPacket.getMessage().getMessage(), StandardCharsets.UTF_8));
         Assertions.assertEquals(srcId, receivedPacket.getBSrc());
         Assertions.assertEquals(pktId, receivedPacket.getBPktId());
@@ -54,11 +78,11 @@ class PacketTest {
     void testPacketTooSmallForReceivedPacket() {
         Assertions.assertThrows(DiscardException.class, () -> {
             byte[] salt = new byte[16];
-            new ReceivedPacketImpl(salt, 0, cipher2);
+            new ReceivedPacketImpl(salt, 0, cipherer);
         });
         Assertions.assertThrows(DiscardException.class, () -> {
             byte[] salt = new byte[50];
-            new ReceivedPacketImpl(salt, 42, cipher2);
+            new ReceivedPacketImpl(salt, 42, cipherer);
         });
     }
 
@@ -66,7 +90,7 @@ class PacketTest {
     void testMagicByteAbsent() {
         Assertions.assertThrows(DiscardException.class, () -> {
             byte[] salt = new byte[32];
-            new ReceivedPacketImpl(salt, 0, cipher2);
+            new ReceivedPacketImpl(salt, 0, cipherer);
         });
     }
 
@@ -82,7 +106,7 @@ class PacketTest {
                     1,
                     12, 12
             };
-            new ReceivedPacketImpl(part1, 0, cipher2);
+            new ReceivedPacketImpl(part1, 0, cipherer);
         });
     }
 
@@ -98,7 +122,7 @@ class PacketTest {
                     1,
                     0, 1
             };
-            new ReceivedPacketImpl(part1, 0, cipher2);
+            new ReceivedPacketImpl(part1, 0, cipherer);
         });
     }
 }
