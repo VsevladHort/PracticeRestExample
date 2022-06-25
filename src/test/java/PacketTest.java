@@ -20,15 +20,13 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 class PacketTest {
-    private static Cipher cipher1;
-    private static Cipher cipher2;
     private static Cipherer cipherer;
     private static Cipherer ciphererSimple;
 
     @BeforeAll
     static void init() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
-        cipher1 = Cipher.getInstance("AES");
-        cipher2 = Cipher.getInstance("AES");
+        Cipher cipher1 = Cipher.getInstance("AES");
+        Cipher cipher2 = Cipher.getInstance("AES");
         byte[] salt = new byte[]{
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
