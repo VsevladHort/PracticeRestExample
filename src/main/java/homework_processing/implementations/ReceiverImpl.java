@@ -1,32 +1,24 @@
 package homework_processing.implementations;
 
+import homework_processing.abstractions.Decryptor;
 import homework_processing.abstractions.Receiver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ReceiverImpl implements Receiver {
-    private final List<byte[]> listOfMessages;
-    private List<Thread> listOfThreadsLaunched;
+    private Thread threadLaunched;
+    private final byte[] bytes;
+    private final Decryptor decryptor;
 
-    public ReceiverImpl(List<byte[]> listOfMessages) {
-        this.listOfMessages = listOfMessages;
-        listOfThreadsLaunched = new ArrayList<>();
+    public ReceiverImpl(byte[] messages) {
+        bytes = messages;
+        decryptor = new DecryptorImpl();
     }
 
     @Override
     public void receiveMessage() {
-        listOfMessages.forEach(receivedPacket -> listOfThreadsLaunched.add(new Thread(() -> {
+        threadLaunched = new Thread(() -> decryptor.decrypt(bytes));
+    }
 
-        })));
-        listOfThreadsLaunched.forEach(Thread::start);
-        listOfThreadsLaunched.forEach(thread -> {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                Thread.currentThread().interrupt();
-            }
-        });
+    public Thread getThreadLaunched() {
+        return threadLaunched;
     }
 }

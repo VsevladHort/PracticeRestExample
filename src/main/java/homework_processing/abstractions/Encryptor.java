@@ -1,5 +1,7 @@
 package homework_processing.abstractions;
 
+import packets.abstractions.Message;
+
 public interface Encryptor {
-    void encrypt(byte[] message);
+    byte[] encrypt(Message message);
 }

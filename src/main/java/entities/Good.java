@@ -20,6 +20,16 @@ public final class Good {
         this.amount = amount;
     }
 
+    public Good(String name) {
+        if (name == null)
+            throw new IllegalArgumentException(ERROR);
+        this.name = name;
+        this.description = "NOT SET";
+        this.price = Integer.MAX_VALUE;
+        this.producer = "NOT SET";
+        this.amount = 0;
+    }
+
     public String getName() {
         return name;
     }
