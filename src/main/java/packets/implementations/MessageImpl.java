@@ -29,6 +29,13 @@ public class MessageImpl implements Message {
         bytes.get(Constants.MSG_OFFSET_MESSAGE, message);
     }
 
+    public MessageImpl(byte[] message, int cType, int bUserId) {
+        this.cType = cType;
+        this.bUserId = bUserId;
+        this.message = new byte[message.length];
+        System.arraycopy(message, 0, this.message, 0, message.length);
+    }
+
     @Override
     public int getCType() {
         return cType;

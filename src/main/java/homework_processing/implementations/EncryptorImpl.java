@@ -4,7 +4,7 @@ import homework_processing.abstractions.Encryptor;
 
 public class EncryptorImpl implements Encryptor {
     @Override
-    public void decrypt(byte[] message) {
+    public void encrypt(byte[] message) {
 
     }
 }

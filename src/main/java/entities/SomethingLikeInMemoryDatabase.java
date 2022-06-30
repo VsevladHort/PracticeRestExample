@@ -1,20 +1,20 @@
 package entities;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SomethingLikeInMemoryDatabase {
-    public final Set<GoodGroup> groups;
+    public final Map<String, GoodGroup> groups;
     private static SomethingLikeInMemoryDatabase instance;
 
-    private SomethingLikeInMemoryDatabase(Set<GoodGroup> set) {
+    private SomethingLikeInMemoryDatabase(Map<String, GoodGroup> set) {
         groups = set;
     }
 
     public static SomethingLikeInMemoryDatabase getInstance() {
         synchronized (Good.class) {
             if (instance == null) {
-                instance = new SomethingLikeInMemoryDatabase(new HashSet<>());
+                instance = new SomethingLikeInMemoryDatabase(new ConcurrentHashMap<>());
             }
             return instance;
         }

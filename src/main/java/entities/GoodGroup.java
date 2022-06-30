@@ -1,13 +1,13 @@
 package entities;
 
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GoodGroup {
     private String name;
     private String description;
-    private Set<Good> goods;
+    private final Map<String, Good> goods;
     private static final String ERROR = "Name should not be null";
 
     public GoodGroup(String name, String description) {
@@ -15,11 +15,15 @@ public class GoodGroup {
             throw new IllegalArgumentException(ERROR);
         this.name = name;
         this.description = description;
-        goods = new HashSet<>();
+        goods = new ConcurrentHashMap<>();
     }
 
     public String getName() {
         return name;
+    }
+
+    public Map<String, Good> getGoods() {
+        return goods;
     }
 
     public void setName(String name) {

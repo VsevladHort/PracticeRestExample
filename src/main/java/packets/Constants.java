@@ -15,4 +15,6 @@ public class Constants {
     public static final int MSG_OFFSET_B_USER_ID = 4;
     public static final int MSG_OFFSET_MESSAGE = 8;
     public static final int MIN_LENGTH = OFFSET_MSG + MSG_OFFSET_MESSAGE + Short.BYTES;
+
+    public static final int TYPE_RESPONSE_OK = 0;
 }
