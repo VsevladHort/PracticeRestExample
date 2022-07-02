@@ -19,4 +19,11 @@ public class SomethingLikeInMemoryDatabase {
             return instance;
         }
     }
+
+    public static void clear() {
+        synchronized (Good.class) {
+            if (instance != null)
+                instance.groups.clear();
+        }
+    }
 }

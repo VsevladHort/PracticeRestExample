@@ -52,7 +52,6 @@ public class MessageWrapperImpl implements MessageWrapper {
                 bytes.add((byte) ((cipheredMessage.length >>> i * 8) & 0xff));
             }
             short crc16n1 = calculator.calculate(bytes, 0, bytes.size());
-            LOGGER.log(Level.INFO, "crc16n1 in wrapper: " + crc16n1);
             for (int i = Short.BYTES - 1; i >= 0; i--) {
                 bytes.add((byte) ((crc16n1 >>> i * 8) & 0xff));
             }
@@ -60,7 +59,6 @@ public class MessageWrapperImpl implements MessageWrapper {
                 bytes.add(b);
             }
             short crc16n2 = calculator.calculate(cipheredMessage, 0, cipheredMessage.length);
-            LOGGER.log(Level.INFO, "crc16n2 in wrapper: " + crc16n2);
             for (int i = Short.BYTES - 1; i >= 0; i--) {
                 bytes.add((byte) ((crc16n2 >>> i * 8) & 0xff));
             }

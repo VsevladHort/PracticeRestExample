@@ -16,6 +16,7 @@ public class ReceiverImpl implements Receiver {
     @Override
     public void receiveMessage() {
         threadLaunched = new Thread(() -> decryptor.decrypt(bytes));
+        threadLaunched.start();
     }
 
     public Thread getThreadLaunched() {

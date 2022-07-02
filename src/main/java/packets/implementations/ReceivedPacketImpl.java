@@ -33,18 +33,10 @@ public class ReceivedPacketImpl implements ReceivedPacket {
         bPktId = buffer.getLong(startIndex + Constants.OFFSET_PKT_ID);
         wLen = buffer.getInt(startIndex + Constants.OFFSET_LEN);
         wCrc16n1 = buffer.getShort(startIndex + Constants.OFFSET_CRC);
-        LOGGER.log(Level.INFO, "crc16n1 in receivedPacket from source: " + wCrc16n1);
         CRCCalculator calculator = CRCCalculatorImplementation.provide();
-        LOGGER.log(Level.INFO, "crc16n1 in receivedPacket calculated locally: " +
-                calculator.calculate(bytes, startIndex, Constants.OFFSET_CRC));
         if (wCrc16n1 != calculator.calculate(bytes, startIndex, Constants.OFFSET_CRC))
             throw new DiscardException("wCrc16n1 did not match");
         wCrc16n2 = buffer.getShort(startIndex + Constants.OFFSET_MSG + wLen);
-        LOGGER.log(Level.INFO, "crc16n2 in receivedPacket from source: " + wCrc16n2);
-        LOGGER.log(Level.INFO, "crc16n2 in receivedPacket calculated locally: " +
-                calculator.calculate(bytes,
-                        startIndex + Constants.OFFSET_MSG,
-                        startIndex + Constants.OFFSET_MSG + wLen));
         if (wCrc16n2 != calculator.calculate(bytes,
                 startIndex + Constants.OFFSET_MSG,
                 Constants.OFFSET_MSG + wLen))

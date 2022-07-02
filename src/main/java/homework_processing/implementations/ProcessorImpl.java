@@ -4,6 +4,7 @@ import dao.Dao;
 import dao.DaoImplInMemory;
 import entities.Good;
 import entities.GoodGroup;
+import entities.SomethingLikeInMemoryDatabase;
 import homework_processing.abstractions.Encryptor;
 import homework_processing.abstractions.Processor;
 import packets.abstractions.Message;
@@ -30,6 +31,7 @@ public class ProcessorImpl implements Processor {
         String info = new String(message.getMessage());
         bUserId = message.getBUserId();
         String[] contentSplit = info.split(";");
+        System.out.println(message.getCType());
         switch (message.getCType()) {
             case TYPE_REQUEST_ADD_GROUP -> addGroup(dao, contentSplit);
             case TYPE_REQUEST_ADD_GOOD -> addGood(dao, contentSplit);
@@ -54,6 +56,7 @@ public class ProcessorImpl implements Processor {
     }
 
     private void addGood(Dao dao, String[] contentSplit) {
+        System.out.println("Here i am");
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
         dao.addGood(contentSplit[0], new Good(contentSplit[1]));
