@@ -15,12 +15,8 @@ public class EncryptorImpl implements Encryptor {
     }
 
     @Override
-    public byte[] encrypt(Message message) {
-        try {
-            return messageWrapper.wrap(message.getMessage(), (byte) 0, pktId++, message.getCType(), message.getBUserId(), new CiphererSimpleImpl());
-        } catch (DiscardException e) {
-            e.printStackTrace();
-        }
-        return new byte[0];
+    public byte[] encrypt(Message message) throws DiscardException {
+        return messageWrapper.wrap(message.getMessage(), (byte) 0, pktId++, message.getCType(),
+                message.getBUserId(), new CiphererSimpleImpl());
     }
 }

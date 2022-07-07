@@ -18,6 +18,7 @@ public class Constants {
 
     public static final int TYPE_RESPONSE_OK = 0;
 
+    public static final int TYPE_REQUEST_TERMINATE_CONNECTION = 1;
     public static final int TYPE_REQUEST_ADD_GROUP = 1;
     public static final int TYPE_REQUEST_ADD_GOOD = 2;
     public static final int TYPE_REQUEST_FIND_GOOD_AMOUNT = 3;

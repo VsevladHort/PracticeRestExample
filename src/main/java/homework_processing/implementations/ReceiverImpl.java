@@ -2,6 +2,9 @@ package homework_processing.implementations;
 
 import homework_processing.abstractions.Decryptor;
 import homework_processing.abstractions.Receiver;
+import packets.exceptions.DiscardException;
+
+import java.net.UnknownHostException;
 
 public class ReceiverImpl implements Receiver {
     private Thread threadLaunched;
@@ -14,11 +17,13 @@ public class ReceiverImpl implements Receiver {
     }
 
     @Override
-    public void receiveMessage() {
-        threadLaunched = new Thread(() -> decryptor.decrypt(bytes));
-        threadLaunched.start();
+    public void receiveMessage() throws DiscardException, UnknownHostException {
+        decryptor.decrypt(bytes);
     }
 
+    /**
+     * returns a thread launches by the receiver, null if not thread was launched
+     */
     public Thread getThreadLaunched() {
         return threadLaunched;
     }
