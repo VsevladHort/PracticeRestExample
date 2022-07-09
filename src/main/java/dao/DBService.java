@@ -12,9 +12,13 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Practice 4
+ */
 public class DBService implements Dao {
     private Connection con;
     private static final Logger LOGGER = Logger.getLogger(DBService.class.getCanonicalName());
+    private static final String BAD_SQL_WARNING = "BAD SQL";
 
     public DBService(String nameOfDb) throws DaoWrapperException {
         initialization(nameOfDb);
@@ -46,7 +50,7 @@ public class DBService implements Dao {
                                            'price' REAL CHECK ('price' > 0),
                                            PRIMARY KEY ('name', 'group_name'),
                                            FOREIGN KEY ('group_name') REFERENCES good_groups('name')
-                                           ON DELETE CASCADE 
+                                           ON DELETE CASCADE
                                          );
                                          """
                          )) {
@@ -60,11 +64,11 @@ public class DBService implements Dao {
             LOGGER.log(Level.SEVERE, "Не знайшли драйвер JDBC");
             e.printStackTrace();
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
     }
@@ -91,12 +95,12 @@ public class DBService implements Dao {
             result = insert.executeUpdate();
             con.commit();
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return result != 0;
@@ -130,12 +134,12 @@ public class DBService implements Dao {
             result = insert.executeUpdate();
             con.commit();
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return result != 0;
@@ -152,12 +156,12 @@ public class DBService implements Dao {
                          )) {
                 return getGoodGroups(limit, select);
             } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                 e.printStackTrace();
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
-                    throw new DaoWrapperException("Bad sql", e);
+                    throw new DaoWrapperException(BAD_SQL_WARNING, e);
                 }
             }
         } else if (criteria == CriteriaGoodGroup.DESCRIPTION) {
@@ -167,12 +171,12 @@ public class DBService implements Dao {
                          )) {
                 return getGoodGroups(limit, select);
             } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                 e.printStackTrace();
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
-                    throw new DaoWrapperException("Bad sql", e);
+                    throw new DaoWrapperException(BAD_SQL_WARNING, e);
                 }
             }
         }
@@ -200,12 +204,12 @@ public class DBService implements Dao {
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                    LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                     e.printStackTrace();
                     try {
                         con.rollback();
                     } catch (SQLException ex) {
-                        throw new DaoWrapperException("Bad sql", e);
+                        throw new DaoWrapperException(BAD_SQL_WARNING, e);
                     }
                 }
             }
@@ -216,12 +220,12 @@ public class DBService implements Dao {
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                    LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                     e.printStackTrace();
                     try {
                         con.rollback();
                     } catch (SQLException ex) {
-                        throw new DaoWrapperException("Bad sql", e);
+                        throw new DaoWrapperException(BAD_SQL_WARNING, e);
                     }
                 }
             }
@@ -232,12 +236,12 @@ public class DBService implements Dao {
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                    LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                     e.printStackTrace();
                     try {
                         con.rollback();
                     } catch (SQLException ex) {
-                        throw new DaoWrapperException("Bad sql", e);
+                        throw new DaoWrapperException(BAD_SQL_WARNING, e);
                     }
                 }
             }
@@ -248,12 +252,12 @@ public class DBService implements Dao {
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                    LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                     e.printStackTrace();
                     try {
                         con.rollback();
                     } catch (SQLException ex) {
-                        throw new DaoWrapperException("Bad sql", e);
+                        throw new DaoWrapperException(BAD_SQL_WARNING, e);
                     }
                 }
             }
@@ -264,12 +268,12 @@ public class DBService implements Dao {
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
-                    LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+                    LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                     e.printStackTrace();
                     try {
                         con.rollback();
                     } catch (SQLException ex) {
-                        throw new DaoWrapperException("Bad sql", e);
+                        throw new DaoWrapperException(BAD_SQL_WARNING, e);
                     }
                 }
             }
@@ -310,12 +314,12 @@ public class DBService implements Dao {
                 return null;
             return returnableList.get(0);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return null;
@@ -336,12 +340,12 @@ public class DBService implements Dao {
                 return null;
             return returnableList.get(0);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return null;
@@ -359,12 +363,12 @@ public class DBService implements Dao {
             con.commit();
             return result != 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return false;
@@ -386,12 +390,12 @@ public class DBService implements Dao {
             con.commit();
             return result != 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return false;
@@ -409,12 +413,12 @@ public class DBService implements Dao {
             con.commit();
             return result != 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return false;
@@ -431,12 +435,12 @@ public class DBService implements Dao {
             con.commit();
             return result != 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Не вірний SQL запит");
+            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
             e.printStackTrace();
             try {
                 con.rollback();
             } catch (SQLException ex) {
-                throw new DaoWrapperException("Bad sql", e);
+                throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
         return false;

@@ -5,7 +5,6 @@ import entities.GoodGroup;
 import entities.SomethingLikeInMemoryDatabase;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class DaoImplInMemory implements Dao {
