@@ -7,6 +7,7 @@ import entities.GoodGroup;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -24,6 +25,10 @@ public class DBService implements Dao {
         initialization(nameOfDb);
     }
 
+    public void close() throws SQLException {
+        con.close();
+    }
+
     private void initialization(String name) throws DaoWrapperException {
         try {
             LOGGER.addHandler(new FileHandler(name + "dbLogs.log"));
@@ -36,20 +41,20 @@ public class DBService implements Dao {
             con.setAutoCommit(false);
             try (PreparedStatement createGoodGroupsTable =
                          con.prepareStatement(
-                                 "CREATE TABLE IF NOT EXISTS 'good_groups' ('name' TEXT PRIMARY KEY, 'description' TEXT);"
+                                 "CREATE TABLE IF NOT EXISTS good_groups (name TEXT PRIMARY KEY, description TEXT);"
                          );
                  PreparedStatement createGoodsTable =
                          con.prepareStatement(
                                  """ 
-                                         CREATE TABLE IF NOT EXISTS 'goods' (
-                                           'name' TEXT UNIQUE,
-                                           'group_name' TEXT,
-                                           'description' TEXT,
-                                           'producer' TEXT,
-                                           'amount' INTEGER CHECK ('amount' > 0),
-                                           'price' REAL CHECK ('price' > 0),
-                                           PRIMARY KEY ('name', 'group_name'),
-                                           FOREIGN KEY ('group_name') REFERENCES good_groups('name')
+                                         CREATE TABLE IF NOT EXISTS goods (
+                                           name TEXT,
+                                           group_name TEXT,
+                                           description TEXT,
+                                           producer TEXT,
+                                           amount INTEGER CHECK (amount >= 0),
+                                           price REAL CHECK (price >= 0),
+                                           PRIMARY KEY (name, group_name),
+                                           FOREIGN KEY (group_name) REFERENCES good_groups(name)
                                            ON DELETE CASCADE
                                          );
                                          """
@@ -78,12 +83,12 @@ public class DBService implements Dao {
         int result = 0;
         try (PreparedStatement lookIfContains =
                      con.prepareStatement(
-                             "SELECT * FROM good_groups WHERE 'name' = ?"
+                             "SELECT * FROM good_groups WHERE name = ?"
                      );
              PreparedStatement insert =
                      con.prepareStatement(
                              """ 
-                                     INSERT INTO good_groups COLUMN('name', 'description') VALUES (?, ?)
+                                     INSERT INTO good_groups (name, description) VALUES (?, ?)
                                      """
                      )) {
             lookIfContains.setString(1, group.getName());
@@ -93,6 +98,7 @@ public class DBService implements Dao {
             insert.setString(1, group.getName());
             insert.setString(2, group.getDescription());
             result = insert.executeUpdate();
+            result1.close();
             con.commit();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
@@ -111,13 +117,13 @@ public class DBService implements Dao {
         int result = 0;
         try (PreparedStatement lookIfContains =
                      con.prepareStatement(
-                             "SELECT * FROM goods WHERE 'group_name' = ? AND 'name' = ?"
+                             "SELECT * FROM goods WHERE group_name = ? AND name = ?"
                      );
              PreparedStatement insert =
                      con.prepareStatement(
                              """ 
-                                     INSERT INTO goods COLUMN('name', 'group_name', 'description',
-                                      'producer', 'amount', 'price') VALUES (?, ?, ?, ?, ?, ?)
+                                     INSERT INTO goods (name, group_name, description,
+                                      producer, amount, price) VALUES (?, ?, ?, ?, ?, ?)
                                      """
                      )) {
             lookIfContains.setString(1, group);
@@ -130,6 +136,7 @@ public class DBService implements Dao {
             insert.setString(3, good.getDescription());
             insert.setString(4, good.getProducer());
             insert.setInt(5, good.getAmount());
+            LOGGER.log(Level.INFO, "" + good.getAmount());
             insert.setDouble(6, good.getPrice());
             result = insert.executeUpdate();
             con.commit();
@@ -152,7 +159,7 @@ public class DBService implements Dao {
         if (criteria == CriteriaGoodGroup.NAME) {
             try (PreparedStatement select =
                          con.prepareStatement(
-                                 "SELECT * FROM good_groups ORDER BY 'name' LIMIT ? DESC"
+                                 "SELECT * FROM good_groups ORDER BY name DESC LIMIT ?"
                          )) {
                 return getGoodGroups(limit, select);
             } catch (SQLException e) {
@@ -167,7 +174,7 @@ public class DBService implements Dao {
         } else if (criteria == CriteriaGoodGroup.DESCRIPTION) {
             try (PreparedStatement select =
                          con.prepareStatement(
-                                 "SELECT * FROM good_groups ORDER BY 'description' LIMIT ? DESC"
+                                 "SELECT * FROM good_groups ORDER BY description DESC LIMIT ?"
                          )) {
                 return getGoodGroups(limit, select);
             } catch (SQLException e) {
@@ -200,7 +207,7 @@ public class DBService implements Dao {
             case NAME -> {
                 try (PreparedStatement select =
                              con.prepareStatement(
-                                     "SELECT * FROM goods ORDER BY 'name' LIMIT ? DESC"
+                                     "SELECT * FROM goods ORDER BY name DESC LIMIT ?"
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
@@ -216,7 +223,7 @@ public class DBService implements Dao {
             case DESCRIPTION -> {
                 try (PreparedStatement select =
                              con.prepareStatement(
-                                     "SELECT * FROM goods ORDER BY 'description' LIMIT ? DESC"
+                                     "SELECT * FROM goods ORDER BY description DESC LIMIT ?"
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
@@ -232,7 +239,7 @@ public class DBService implements Dao {
             case PRICE -> {
                 try (PreparedStatement select =
                              con.prepareStatement(
-                                     "SELECT * FROM goods ORDER BY 'price' LIMIT ? DESC"
+                                     "SELECT * FROM goods ORDER BY price DESC LIMIT ?"
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
@@ -248,7 +255,7 @@ public class DBService implements Dao {
             case AMOUNT -> {
                 try (PreparedStatement select =
                              con.prepareStatement(
-                                     "SELECT * FROM goods ORDER BY 'amount' LIMIT ? DESC"
+                                     "SELECT * FROM goods ORDER BY amount DESC LIMIT ?"
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
@@ -264,7 +271,7 @@ public class DBService implements Dao {
             case PRODUCER -> {
                 try (PreparedStatement select =
                              con.prepareStatement(
-                                     "SELECT * FROM goods ORDER BY 'producer' LIMIT ? DESC"
+                                     "SELECT * FROM goods ORDER BY producer DESC LIMIT ?"
                              )) {
                     return getGoods(limit, select);
                 } catch (SQLException e) {
@@ -298,7 +305,7 @@ public class DBService implements Dao {
     public Good getGood(String groupName, String goodName) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "SELECT * FROM 'goods' WHERE 'name' = ? AND 'group_name' = ?"
+                             "SELECT * FROM goods WHERE name = ? AND group_name = ?"
                      )) {
             select.setString(1, goodName);
             select.setString(2, groupName);
@@ -329,7 +336,7 @@ public class DBService implements Dao {
     public GoodGroup getGroup(String groupName) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "SELECT * FROM 'good_groups' WHERE 'name' = ?"
+                             "SELECT * FROM good_groups WHERE name = ?"
                      )) {
             select.setString(1, groupName);
             var result = select.executeQuery();
@@ -355,7 +362,7 @@ public class DBService implements Dao {
     public boolean updateGroup(GoodGroup group) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "UPDATE 'good_groups' SET 'description' = ? WHERE 'name' = ?"
+                             "UPDATE good_groups SET description = ? WHERE name = ?"
                      )) {
             select.setString(1, group.getDescription());
             select.setString(2, group.getName());
@@ -378,7 +385,7 @@ public class DBService implements Dao {
     public boolean updateGood(String groupName, Good good) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "UPDATE 'goods' SET 'description' = ?, 'producer' = ?, 'amount' = ?, 'price' = ? WHERE 'name' = ? AND 'group_name' = ?"
+                             "UPDATE goods SET description = ?, producer = ?, amount = ?, price = ? WHERE name = ? AND group_name = ?"
                      )) {
             select.setString(1, good.getDescription());
             select.setString(2, good.getProducer());
@@ -405,7 +412,7 @@ public class DBService implements Dao {
     public boolean deleteGood(String groupName, String goodName) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "DELETE FROM 'goods' WHERE 'group_name' = ? AND 'name' = ?"
+                             "DELETE FROM goods WHERE group_name = ? AND name = ?"
                      )) {
             select.setString(1, groupName);
             select.setString(2, goodName);
@@ -428,7 +435,7 @@ public class DBService implements Dao {
     public boolean deleteGoodGroup(String name) throws DaoWrapperException {
         try (PreparedStatement select =
                      con.prepareStatement(
-                             "DELETE FROM 'good_groups' WHERE 'name' = ?"
+                             "DELETE FROM good_groups WHERE name = ?"
                      )) {
             select.setString(1, name);
             var result = select.executeUpdate();
