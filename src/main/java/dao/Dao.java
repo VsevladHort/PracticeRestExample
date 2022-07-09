@@ -1,29 +1,67 @@
 package dao;
 
+import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
 
 import java.util.List;
-import java.util.Set;
 
 public interface Dao {
-    boolean addGroup(GoodGroup group);
+    /**
+     * Create
+     */
+    boolean createGroup(GoodGroup group) throws DaoWrapperException;
 
-    boolean addGood(String group, Good good);
+    /**
+     * Create
+     */
+    boolean createGood(String group, Good good) throws DaoWrapperException;
 
-    List<GoodGroup> getGroups();
+    /**
+     * List by criteria
+     *
+     * @param limit    - limit for the sql query
+     * @param criteria - what to sort by
+     * @return list of GoodGroups from the database
+     */
+    List<GoodGroup> getGroups(int limit, CriteriaGoodGroup criteria) throws DaoWrapperException;
 
-    List<Good> getGoods(String groupName);
+    /**
+     * List by criteria
+     *
+     * @param limit    - limit for the sql query
+     * @param criteria - what to sort by
+     * @return list of Goods from the database
+     */
+    List<Good> getGoods(String groupName, int limit, CriteriaGood criteria) throws DaoWrapperException;
 
-    Good getGood(String groupName, String goodName);
+    /**
+     * Read
+     */
+    Good getGood(String groupName, String goodName) throws DaoWrapperException;
 
-    GoodGroup getGroup(String groupName);
+    /**
+     * Read
+     */
+    GoodGroup getGroup(String groupName) throws DaoWrapperException;
 
-    boolean updateGroup(GoodGroup group);
+    /**
+     * Update
+     */
+    boolean updateGroup(GoodGroup group) throws DaoWrapperException;
 
-    boolean updateGood(String groupName, Good good);
+    /**
+     * Update
+     */
+    boolean updateGood(String groupName, Good good) throws DaoWrapperException;
 
-    boolean deleteGood(String groupName, String goodName);
+    /**
+     * Delete
+     */
+    boolean deleteGood(String groupName, String goodName) throws DaoWrapperException;
 
-    boolean deleteGoodGroup(String name);
+    /**
+     * Delete
+     */
+    boolean deleteGoodGroup(String name) throws DaoWrapperException;
 }

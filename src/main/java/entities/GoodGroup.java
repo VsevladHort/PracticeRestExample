@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GoodGroup {
+public class GoodGroup implements Comparable<GoodGroup> {
     private String name;
     private String description;
     private final Map<String, Good> goods;
@@ -51,5 +51,10 @@ public class GoodGroup {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public int compareTo(GoodGroup o) {
+        return name.compareTo(o.getName());
     }
 }

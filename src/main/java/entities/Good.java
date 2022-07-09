@@ -2,7 +2,7 @@ package entities;
 
 import java.util.Objects;
 
-public final class Good {
+public final class Good implements Comparable<Good> {
     private String name;
     private String description;
     private double price;
@@ -87,5 +87,10 @@ public final class Good {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public int compareTo(Good o) {
+        return name.compareTo(o.getName());
     }
 }

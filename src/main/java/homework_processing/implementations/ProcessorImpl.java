@@ -2,9 +2,9 @@ package homework_processing.implementations;
 
 import dao.Dao;
 import dao.DaoImplInMemory;
+import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
-import entities.SomethingLikeInMemoryDatabase;
 import homework_processing.abstractions.Encryptor;
 import homework_processing.abstractions.Processor;
 import packets.abstractions.Message;
@@ -31,22 +31,30 @@ public class ProcessorImpl implements Processor {
         String info = new String(message.getMessage());
         bUserId = message.getBUserId();
         String[] contentSplit = info.split(";");
-        System.out.println(message.getCType());
-        switch (message.getCType()) {
-            case TYPE_REQUEST_ADD_GROUP -> addGroup(dao, contentSplit);
-            case TYPE_REQUEST_ADD_GOOD -> addGood(dao, contentSplit);
-            case TYPE_REQUEST_ADD_GOOD_AMOUNT -> addGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_LOWER_GOOD_AMOUNT -> lowerGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_FIND_GOOD_AMOUNT -> findGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_SET_PRICE_FOR_GOOD -> setGoodPrice(dao, contentSplit);
-            default -> throw new IllegalStateException("Unexpected message code: " + message.getCType());
+        try {
+            switch (message.getCType()) {
+                case TYPE_REQUEST_ADD_GROUP -> addGroup(dao, contentSplit);
+                case TYPE_REQUEST_ADD_GOOD -> addGood(dao, contentSplit);
+                case TYPE_REQUEST_ADD_GOOD_AMOUNT -> addGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_LOWER_GOOD_AMOUNT -> lowerGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_FIND_GOOD_AMOUNT -> findGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_SET_PRICE_FOR_GOOD -> setGoodPrice(dao, contentSplit);
+                default -> throw new IllegalStateException("Unexpected message code: " + message.getCType());
+            }
+        } catch (DaoWrapperException e) {
+            try {
+                new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("SOMETHING WENT BAD".getBytes(StandardCharsets.UTF_8),
+                        TYPE_RESPONSE_OK, bUserId)), InetAddress.getLocalHost());
+            } catch (UnknownHostException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
-    private void addGroup(Dao dao, String[] contentSplit) {
+    private void addGroup(Dao dao, String[] contentSplit) throws DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
-        dao.addGroup(new GoodGroup(contentSplit[0], contentSplit[1]));
+        dao.createGroup(new GoodGroup(contentSplit[0], contentSplit[1]));
         try {
             new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                     TYPE_RESPONSE_OK, bUserId)), InetAddress.getLocalHost());
@@ -55,11 +63,11 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void addGood(Dao dao, String[] contentSplit) {
+    private void addGood(Dao dao, String[] contentSplit) throws DaoWrapperException {
         System.out.println("Here i am");
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
-        dao.addGood(contentSplit[0], new Good(contentSplit[1]));
+        dao.createGood(contentSplit[0], new Good(contentSplit[1]));
         try {
             new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                     TYPE_RESPONSE_OK, bUserId)), InetAddress.getLocalHost());
@@ -68,7 +76,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void addGoodAmount(Dao dao, String[] contentSplit) {
+    private void addGoodAmount(Dao dao, String[] contentSplit) throws DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -81,7 +89,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void lowerGoodAmount(Dao dao, String[] contentSplit) {
+    private void lowerGoodAmount(Dao dao, String[] contentSplit) throws DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -94,7 +102,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void findGoodAmount(Dao dao, String[] contentSplit) {
+    private void findGoodAmount(Dao dao, String[] contentSplit) throws DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -107,7 +115,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void setGoodPrice(Dao dao, String[] contentSplit) {
+    private void setGoodPrice(Dao dao, String[] contentSplit) throws DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);

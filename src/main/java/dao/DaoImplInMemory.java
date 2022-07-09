@@ -5,13 +5,14 @@ import entities.GoodGroup;
 import entities.SomethingLikeInMemoryDatabase;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class DaoImplInMemory implements Dao {
     private final SomethingLikeInMemoryDatabase dbInstance = SomethingLikeInMemoryDatabase.getInstance();
 
     @Override
-    public boolean addGroup(GoodGroup group) {
+    public boolean createGroup(GoodGroup group) {
         if (dbInstance.groups.containsKey(group.getName()))
             return false;
         dbInstance.groups.put(group.getName(), group);
@@ -19,7 +20,7 @@ public class DaoImplInMemory implements Dao {
     }
 
     @Override
-    public boolean addGood(String group, Good good) {
+    public boolean createGood(String group, Good good) {
         var groupFromDb = dbInstance.groups.get(group);
         if (groupFromDb == null || groupFromDb.getGoods().containsKey(good.getName()))
             return false;
@@ -28,13 +29,19 @@ public class DaoImplInMemory implements Dao {
     }
 
     @Override
-    public List<GoodGroup> getGroups() {
-        return new ArrayList<>(dbInstance.groups.values());
+    public List<GoodGroup> getGroups(int limit, CriteriaGoodGroup criteria) {
+        if (limit < 0)
+            throw new IllegalArgumentException("Limit less than 0");
+        var list = new ArrayList<>(dbInstance.groups.values());
+        return list.subList(0, limit);
     }
 
     @Override
-    public List<Good> getGoods(String groupName) {
-        return new ArrayList<>(dbInstance.groups.get(groupName).getGoods().values());
+    public List<Good> getGoods(String groupName, int limit, CriteriaGood criteria) {
+        if (limit < 0)
+            throw new IllegalArgumentException("Limit less than 0");
+        var list = new ArrayList<>(dbInstance.groups.get(groupName).getGoods().values());
+        return list.subList(0, limit);
     }
 
     @Override
@@ -58,7 +65,7 @@ public class DaoImplInMemory implements Dao {
 
     @Override
     public boolean updateGood(String groupName, Good good) {
-        return addGood(groupName, good);
+        return createGood(groupName, good);
     }
 
     @Override
