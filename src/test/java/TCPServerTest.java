@@ -1,9 +1,11 @@
 import dao.Dao;
 import dao.DaoImplInMemory;
-import dao.exceptions.DaoWrapperException;
 import entities.SomethingLikeInMemoryDatabase;
 import homework_processing.implementations.ReceiverImpl;
+import networking.tcp.StoreServerTCP;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import packets.Constants;
 import packets.abstractions.MessageWrapper;
@@ -12,6 +14,7 @@ import packets.implementations.MessageWrapperImpl;
 import packets.utils.implementations.CRCCalculatorImplementation;
 import packets.utils.implementations.CiphererSimpleImpl;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,7 +22,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class MultiThreadingTest {
+class TCPServerTest {
+    private static StoreServerTCP storeServerTCP;
+    private static final int PORT = 1337;
+
+    @BeforeAll
+    static void before() throws IOException {
+        storeServerTCP = new StoreServerTCP(PORT);
+        new Thread(storeServerTCP).start();
+    }
+
+    @AfterAll
+    static void after() throws IOException {
+        storeServerTCP.stop();
+    }
+
     @org.junit.jupiter.api.Test
     void testAddGroups() throws InterruptedException {
         SomethingLikeInMemoryDatabase.clear();
@@ -35,16 +52,14 @@ class MultiThreadingTest {
             }
         });
         Collections.shuffle(listLaunched);
-        List<Thread> listOfThreadsLaunched = new ArrayList<>();
         listLaunched.forEach(it -> {
             try {
                 it.receiveMessage();
             } catch (DiscardException | UnknownHostException e) {
                 e.printStackTrace();
             }
-            listOfThreadsLaunched.add(it.getThreadLaunched());
         });
-        for (Thread thread : listOfThreadsLaunched) {
+        for (Thread thread : storeServerTCP.getRunningThreads()) {
             if (thread != null)
                 thread.join();
         }
@@ -56,7 +71,7 @@ class MultiThreadingTest {
     }
 
     @Test
-    void testAddGood() throws InterruptedException, DaoWrapperException {
+    void testAddGood() throws InterruptedException {
         SomethingLikeInMemoryDatabase.clear();
         String[] messages1 = {"1;Good1", "1;Good2", "1;Good3"};
         String[] messages2 = {"1;2", "1;2", "2;3", "3;4", "4;5"};
@@ -112,7 +127,7 @@ class MultiThreadingTest {
     }
 
     @Test
-    void testAddGoodAmount() throws InterruptedException, DaoWrapperException {
+    void testAddGoodAmount() throws InterruptedException {
         SomethingLikeInMemoryDatabase.clear();
         String[] messages1 = {"1;Good1", "1;Good2", "1;Good3"};
         String[] messages3 = {"1;Good1;10", "1;Good1;30", "1;Good1;60"};
