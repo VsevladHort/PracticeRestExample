@@ -1,7 +1,9 @@
 package homework_processing.implementations;
 
+import dao.DBService;
 import dao.Dao;
 import dao.DaoImplInMemory;
+import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
 import homework_processing.abstractions.Encryptor;
@@ -10,9 +12,13 @@ import packets.abstractions.Message;
 import packets.exceptions.DiscardException;
 import packets.implementations.MessageImpl;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static packets.Constants.*;
 
@@ -21,6 +27,15 @@ public class ProcessorImpl implements Processor {
     private final Encryptor encryptor;
     private int bUserId;
     private InetAddress inetAddress;
+    private static final Logger LOGGER = Logger.getLogger(DBService.class.getCanonicalName());
+
+    static {
+        try {
+            LOGGER.addHandler(new FileHandler("logs/processorLogs.txt"));
+        } catch (IOException e) {
+            LOGGER.log(Level.INFO, "Could not add File handler for processor logging");
+        }
+    }
 
     public ProcessorImpl(Encryptor encryptor) {
         this.encryptor = encryptor;
@@ -42,34 +57,38 @@ public class ProcessorImpl implements Processor {
         String info = new String(message.getMessage());
         bUserId = message.getBUserId();
         String[] contentSplit = info.split(";");
-        switch (message.getCType()) {
-            case TYPE_REQUEST_ADD_GROUP -> addGroup(dao, contentSplit);
-            case TYPE_REQUEST_ADD_GOOD -> addGood(dao, contentSplit);
-            case TYPE_REQUEST_ADD_GOOD_AMOUNT -> addGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_LOWER_GOOD_AMOUNT -> lowerGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_FIND_GOOD_AMOUNT -> findGoodAmount(dao, contentSplit);
-            case TYPE_REQUEST_SET_PRICE_FOR_GOOD -> setGoodPrice(dao, contentSplit);
-            default -> throw new IllegalStateException("Unexpected message code: " + message.getCType());
+        try {
+            switch (message.getCType()) {
+                case TYPE_REQUEST_ADD_GROUP -> addGroup(dao, contentSplit);
+                case TYPE_REQUEST_ADD_GOOD -> addGood(dao, contentSplit);
+                case TYPE_REQUEST_ADD_GOOD_AMOUNT -> addGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_LOWER_GOOD_AMOUNT -> lowerGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_FIND_GOOD_AMOUNT -> findGoodAmount(dao, contentSplit);
+                case TYPE_REQUEST_SET_PRICE_FOR_GOOD -> setGoodPrice(dao, contentSplit);
+                default -> throw new IllegalStateException("Unexpected message code: " + message.getCType());
+            }
+        } catch (DaoWrapperException e) {
+
         }
     }
 
-    private void addGroup(Dao dao, String[] contentSplit) throws DiscardException {
+    private void addGroup(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
-        dao.addGroup(new GoodGroup(contentSplit[0], contentSplit[1]));
+        dao.createGroup(new GoodGroup(contentSplit[0], contentSplit[1]));
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void addGood(Dao dao, String[] contentSplit) throws DiscardException {
+    private void addGood(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
-        dao.addGood(contentSplit[0], new Good(contentSplit[1]));
+        dao.createGood(contentSplit[0], new Good(contentSplit[1]));
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void addGoodAmount(Dao dao, String[] contentSplit) throws DiscardException {
+    private void addGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -78,7 +97,7 @@ public class ProcessorImpl implements Processor {
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void lowerGoodAmount(Dao dao, String[] contentSplit) throws DiscardException {
+    private void lowerGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -87,7 +106,7 @@ public class ProcessorImpl implements Processor {
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void findGoodAmount(Dao dao, String[] contentSplit) throws DiscardException {
+    private void findGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);
@@ -96,7 +115,7 @@ public class ProcessorImpl implements Processor {
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void setGoodPrice(Dao dao, String[] contentSplit) throws DiscardException {
+    private void setGoodPrice(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
         Good good = dao.getGood(contentSplit[0], contentSplit[1]);

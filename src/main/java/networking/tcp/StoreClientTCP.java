@@ -26,6 +26,7 @@ public class StoreClientTCP {
     private volatile boolean isTryingToConnect;
     private static final Logger LOGGER = Logger.getLogger(TCPClientHandler.class.getCanonicalName());
     private static final int MAX_RECONNECT_ATTEMPTS = 3;
+    private static final int WAIT_BEFORE_RECONNECT_ATTEMPT = 10_000;
     private final MessageWrapper messageWrapper = new MessageWrapperImpl(CRCCalculatorImplementation.provide());
 
     public StoreClientTCP() {
@@ -53,7 +54,7 @@ public class StoreClientTCP {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.INFO, "Trying to reconnect: % d".formatted(reconnectTimes));
-                Thread.sleep(10000);
+                Thread.sleep(WAIT_BEFORE_RECONNECT_ATTEMPT);
                 reconnectTimes++;
             }
         }
@@ -65,7 +66,7 @@ public class StoreClientTCP {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.INFO, "Trying to reconnect: % d".formatted(reconnectTimes));
-                Thread.sleep(10000);
+                Thread.sleep(WAIT_BEFORE_RECONNECT_ATTEMPT);
                 reconnectTimes++;
             }
             int startIndex = 0;

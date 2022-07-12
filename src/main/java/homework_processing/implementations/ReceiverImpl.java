@@ -22,7 +22,7 @@ public class ReceiverImpl implements Receiver {
     }
 
     /**
-     * returns a thread launches by the receiver, null if not thread was launched
+     * returns a thread launches by the receiver, null if no thread was launched
      */
     public Thread getThreadLaunched() {
         return threadLaunched;
