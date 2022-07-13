@@ -1,5 +1,6 @@
 import dao.Dao;
 import dao.DaoImplInMemory;
+import dao.exceptions.DaoWrapperException;
 import entities.SomethingLikeInMemoryDatabase;
 import homework_processing.implementations.ReceiverImpl;
 import networking.tcp.StoreServerTCP;
@@ -71,7 +72,7 @@ class TCPServerTest {
     }
 
     @Test
-    void testAddGood() throws InterruptedException {
+    void testAddGood() throws InterruptedException, DaoWrapperException {
         SomethingLikeInMemoryDatabase.clear();
         String[] messages1 = {"1;Good1", "1;Good2", "1;Good3"};
         String[] messages2 = {"1;2", "1;2", "2;3", "3;4", "4;5"};
@@ -120,14 +121,14 @@ class TCPServerTest {
             if (thread != null)
                 thread.join();
         }
-        Dao dao = new DaoImplInMemory();
+        DaoImplInMemory dao = new DaoImplInMemory();
         Assertions.assertEquals("Good1", dao.getGood("1", "Good1").getName());
         Assertions.assertEquals("Good2", dao.getGood("1", "Good2").getName());
         Assertions.assertEquals("Good3", dao.getGood("1", "Good3").getName());
     }
 
     @Test
-    void testAddGoodAmount() throws InterruptedException {
+    void testAddGoodAmount() throws InterruptedException, DaoWrapperException {
         SomethingLikeInMemoryDatabase.clear();
         String[] messages1 = {"1;Good1", "1;Good2", "1;Good3"};
         String[] messages3 = {"1;Good1;10", "1;Good1;30", "1;Good1;60"};
@@ -177,7 +178,7 @@ class TCPServerTest {
             if (thread != null)
                 thread.join();
         }
-        Dao dao = new DaoImplInMemory();
+        DaoImplInMemory dao = new DaoImplInMemory();
         listLaunched.clear();
         Arrays.stream(messages3).forEach(it -> {
             try {

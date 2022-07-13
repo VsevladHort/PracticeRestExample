@@ -2,6 +2,7 @@ package homework_processing.implementations;
 
 import dao.DBService;
 import dao.Dao;
+import dao.DaoImplInMemory;
 import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
 
 import static packets.Constants.*;
 
-public class ProcessorImpl implements Processor {
+public class ProcessorImplInMemory implements Processor {
     private static final String ERROR_MESSAGE = "Malformed message";
     private final Encryptor encryptor;
     private int bUserId;
@@ -36,7 +37,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    public ProcessorImpl(Encryptor encryptor) {
+    public ProcessorImplInMemory(Encryptor encryptor) {
         this.encryptor = encryptor;
         try {
             inetAddress = InetAddress.getLocalHost();
@@ -45,19 +46,14 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    public ProcessorImpl(Encryptor encryptor, InetAddress inetAddress) {
+    public ProcessorImplInMemory(Encryptor encryptor, InetAddress inetAddress) {
         this.encryptor = encryptor;
         this.inetAddress = inetAddress;
     }
 
     @Override
     public void process(Message message) throws DiscardException {
-        Dao dao = null;
-        try {
-            dao = new DBService("name");
-        } catch (DaoWrapperException e) {
-            LOGGER.log(Level.SEVERE, "Dao connection failed");
-        }
+        DaoImplInMemory dao = new DaoImplInMemory();
         String info = new String(message.getMessage());
         bUserId = message.getBUserId();
         String[] contentSplit = info.split(";");
@@ -76,7 +72,7 @@ public class ProcessorImpl implements Processor {
         }
     }
 
-    private void addGroup(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void addGroup(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
         dao.createGroup(new GoodGroup(contentSplit[0], contentSplit[1]));
@@ -84,7 +80,7 @@ public class ProcessorImpl implements Processor {
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void addGood(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void addGood(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
         dao.createGood(contentSplit[0], new Good(contentSplit[1]));
@@ -92,37 +88,37 @@ public class ProcessorImpl implements Processor {
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void addGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void addGoodAmount(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
-        Good good = dao.getGood(contentSplit[0]);
+        Good good = dao.getGood(contentSplit[0], contentSplit[1]);
         good.setAmount(good.getAmount() + Integer.parseInt(contentSplit[2]));
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void lowerGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void lowerGoodAmount(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
-        Good good = dao.getGood(contentSplit[0]);
+        Good good = dao.getGood(contentSplit[0], contentSplit[1]);
         good.setAmount(good.getAmount() - Integer.parseInt(contentSplit[2]));
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void findGoodAmount(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void findGoodAmount(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 2)
             throw new IllegalStateException(ERROR_MESSAGE);
-        Good good = dao.getGood(contentSplit[0]);
+        Good good = dao.getGood(contentSplit[0], contentSplit[1]);
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl(String.valueOf(good.getAmount())
                 .getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
     }
 
-    private void setGoodPrice(Dao dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
+    private void setGoodPrice(DaoImplInMemory dao, String[] contentSplit) throws DiscardException, DaoWrapperException {
         if (contentSplit.length != 3)
             throw new IllegalStateException(ERROR_MESSAGE);
-        Good good = dao.getGood(contentSplit[0]);
+        Good good = dao.getGood(contentSplit[0], contentSplit[1]);
         good.setPrice(Double.parseDouble(contentSplit[2]));
         new SenderImpl().sendMessage(encryptor.encrypt(new MessageImpl("".getBytes(StandardCharsets.UTF_8),
                 TYPE_RESPONSE_OK, bUserId)), inetAddress);
