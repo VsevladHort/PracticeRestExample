@@ -7,10 +7,9 @@ import entities.SomethingLikeInMemoryDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DaoImplInMemory implements Dao {
+public class DaoImplInMemory {
     private final SomethingLikeInMemoryDatabase dbInstance = SomethingLikeInMemoryDatabase.getInstance();
 
-    @Override
     public boolean createGroup(GoodGroup group) {
         if (dbInstance.groups.containsKey(group.getName()))
             return false;
@@ -18,7 +17,7 @@ public class DaoImplInMemory implements Dao {
         return true;
     }
 
-    @Override
+
     public boolean createGood(String group, Good good) {
         var groupFromDb = dbInstance.groups.get(group);
         if (groupFromDb == null || groupFromDb.getGoods().containsKey(good.getName()))
@@ -27,7 +26,7 @@ public class DaoImplInMemory implements Dao {
         return true;
     }
 
-    @Override
+
     public List<GoodGroup> getGroups(int limit, CriteriaGoodGroup criteria) {
         if (limit < 0)
             throw new IllegalArgumentException("Limit less than 0");
@@ -35,7 +34,7 @@ public class DaoImplInMemory implements Dao {
         return list.subList(0, limit);
     }
 
-    @Override
+
     public List<Good> getGoods(String groupName, int limit, CriteriaGood criteria) {
         if (limit < 0)
             throw new IllegalArgumentException("Limit less than 0");
@@ -43,17 +42,17 @@ public class DaoImplInMemory implements Dao {
         return list.subList(0, limit);
     }
 
-    @Override
+
     public Good getGood(String groupName, String goodName) {
         return dbInstance.groups.get(groupName).getGoods().get(goodName);
     }
 
-    @Override
+
     public GoodGroup getGroup(String groupName) {
         return dbInstance.groups.get(groupName);
     }
 
-    @Override
+
     public boolean updateGroup(GoodGroup group) {
         if (dbInstance.groups.containsKey(group.getName())) {
             dbInstance.groups.put(group.getName(), group);
@@ -62,12 +61,12 @@ public class DaoImplInMemory implements Dao {
         return false;
     }
 
-    @Override
+
     public boolean updateGood(String groupName, Good good) {
         return createGood(groupName, good);
     }
 
-    @Override
+
     public boolean deleteGood(String groupName, String goodName) {
         var groupFromDb = dbInstance.groups.get(groupName);
         if (groupFromDb == null || !groupFromDb.getGoods().containsKey(goodName))
@@ -76,7 +75,7 @@ public class DaoImplInMemory implements Dao {
         return true;
     }
 
-    @Override
+
     public boolean deleteGoodGroup(String name) {
         var groupFromDb = dbInstance.groups.get(name);
         if (groupFromDb == null)

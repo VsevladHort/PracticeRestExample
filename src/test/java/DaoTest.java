@@ -5,24 +5,24 @@ import dao.Dao;
 import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-import java.io.File;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 class DaoTest {
     private static final String TEST_DB = "test";
-    private Dao dao;
+    private static Dao dao;
+
+    @BeforeAll
+    static void before() throws DaoWrapperException {
+        DBService.initializeConnection(TEST_DB);
+        dao = new DBService(TEST_DB);
+    }
 
     @BeforeEach
-    void beforeEach() throws DaoWrapperException {
-        var file = new File(TEST_DB);
-        if (file.exists())
-            file.delete();
+    public void beforeEach() throws DaoWrapperException {
         dao = new DBService(TEST_DB);
     }
 
@@ -95,7 +95,7 @@ class DaoTest {
         var good = new Good("good");
         dao.createGroup(group);
         dao.createGood(group.getName(), good);
-        var gottenGood = dao.getGood("1", "good");
+        var gottenGood = dao.getGood("good");
         Assertions.assertEquals(good.getName(), gottenGood.getName());
     }
 
@@ -201,8 +201,8 @@ class DaoTest {
         dao.createGroup(group);
         dao.createGood(group.getName(), good);
         good.setPrice(10);
-        dao.updateGood(group.getName(), good);
-        var gottenGood = dao.getGood("1", "good");
+        dao.updateGood(good);
+        var gottenGood = dao.getGood("good");
         Assertions.assertEquals(good.getPrice(), gottenGood.getPrice());
     }
 
@@ -212,15 +212,38 @@ class DaoTest {
         var good = new Good("good");
         dao.createGroup(group);
         dao.createGood(group.getName(), good);
-        dao.deleteGood(group.getName(), good.getName());
-        var gottenGood = dao.getGood("1", "good");
+        dao.deleteGood(good.getName());
+        var gottenGood = dao.getGood("good");
         Assertions.assertNull(gottenGood);
     }
 
     @AfterEach
-    void afterEach() throws SQLException {
-        if (dao instanceof DBService)
-            ((DBService) dao).close();
-        dao = null;
+    void afterEach() {
+        var con = DBService.getConnection();
+        try (PreparedStatement select1 =
+                     con.prepareStatement(
+                             """
+                                      DROP TABLE IF EXISTS users;
+                                     """
+                     );
+             PreparedStatement select2 =
+                     con.prepareStatement(
+                             """
+                                      DROP TABLE IF EXISTS goods;
+                                     """
+                     );
+             PreparedStatement select3 =
+                     con.prepareStatement(
+                             """
+                                      DROP TABLE IF EXISTS good_groups;
+                                     """
+                     )) {
+            select1.executeUpdate();
+            select2.executeUpdate();
+            select3.executeUpdate();
+            con.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

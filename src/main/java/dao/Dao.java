@@ -8,14 +8,39 @@ import java.util.List;
 
 public interface Dao {
     /**
-     * Create
+     * Create group
      */
     boolean createGroup(GoodGroup group) throws DaoWrapperException;
 
     /**
-     * Create
+     * Create good
      */
     boolean createGood(String group, Good good) throws DaoWrapperException;
+
+    /**
+     * Create user
+     */
+    boolean createUser(String username, String password) throws DaoWrapperException;
+
+    /**
+     * delete user
+     */
+    boolean deleteUser(String username) throws DaoWrapperException;
+
+    /**
+     * update password
+     */
+    boolean updateUser(String username, String password) throws DaoWrapperException;
+
+    /**
+     * get password
+     */
+    String getUserPass(String username) throws DaoWrapperException;
+
+    /**
+     * list usernames
+     */
+    List<String> getUsernames() throws DaoWrapperException;
 
     /**
      * List by criteria
@@ -36,9 +61,18 @@ public interface Dao {
     List<Good> getGoods(String groupName, int limit, CriteriaGood criteria) throws DaoWrapperException;
 
     /**
+     * List by criteria
+     *
+     * @param limit    - limit for the sql query
+     * @param criteria - what to sort by
+     * @return list of Goods from the database
+     */
+    List<Good> getGoods(int limit, CriteriaGood criteria) throws DaoWrapperException;
+
+    /**
      * Read
      */
-    Good getGood(String groupName, String goodName) throws DaoWrapperException;
+    Good getGood(String goodName) throws DaoWrapperException;
 
     /**
      * Read
@@ -53,12 +87,12 @@ public interface Dao {
     /**
      * Update
      */
-    boolean updateGood(String groupName, Good good) throws DaoWrapperException;
+    boolean updateGood(Good good) throws DaoWrapperException;
 
     /**
      * Delete
      */
-    boolean deleteGood(String groupName, String goodName) throws DaoWrapperException;
+    boolean deleteGood(String goodName) throws DaoWrapperException;
 
     /**
      * Delete
