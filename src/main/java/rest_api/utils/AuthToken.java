@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.xml.bind.DatatypeConverter;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -13,11 +14,11 @@ import java.util.Date;
 /*
  *  source: https://stormpath.com/blog/jwt-java-create-verify
  */
-public class JWTUtils {
-    private String key;
+public class AuthToken {
+    private static final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-    public JWTUtils(String key) {
-        this.key = key;
+    public AuthToken(String key) {
+        //this.key = key;
     }
 
     //Sample method to construct a JWT
@@ -30,15 +31,15 @@ public class JWTUtils {
         Date now = new Date(nowMillis);
 
         //We will sign our JWT with our ApiKey secret
-        byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(key);
-        Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
+        // byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(key);
+        //Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
         //Let's set the JWT Claims
         JwtBuilder builder = Jwts.builder().setId(id)
                 .setIssuedAt(now)
                 .setSubject(subject)
                 .setIssuer(issuer)
-                .signWith(signatureAlgorithm, signingKey);
+                .signWith(signingKey, signatureAlgorithm);
 
         //if it has been specified, let's add the expiration
         if (ttlMillis >= 0) {
@@ -56,8 +57,7 @@ public class JWTUtils {
      */
     public String parseJWT(String jwt) {
         try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(DatatypeConverter.parseBase64Binary(key))
+            Claims claims = Jwts.parserBuilder().setSigningKey(signingKey).build()
                     .parseClaimsJws(jwt).getBody();
             return claims.getId();
         } catch (Exception e) {
