@@ -32,18 +32,16 @@ public class DBService implements Dao {
      * Has to be called before creating an instance of dao of this class
      */
     public static void initializeConnection(String name) throws DaoWrapperException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            con = DriverManager.getConnection("jdbc:sqlite:" + name);
-            con.setAutoCommit(false);
-        } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Не знайшли драйвер JDBC");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
+        if (con == null) {
             try {
-                con.rollback();
-            } catch (SQLException ex) {
+                Class.forName("org.sqlite.JDBC");
+                con = DriverManager.getConnection("jdbc:sqlite:" + name);
+                con.setAutoCommit(false);
+            } catch (ClassNotFoundException e) {
+                LOGGER.log(Level.SEVERE, "Не знайшли драйвер JDBC");
+                e.printStackTrace();
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
                 throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
