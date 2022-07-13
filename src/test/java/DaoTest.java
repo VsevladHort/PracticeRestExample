@@ -36,6 +36,13 @@ class DaoTest {
     }
 
     @Test
+    void testUser() throws DaoWrapperException {
+        var users = dao.getUsernames();
+        Assertions.assertEquals(1, users.size());
+        Assertions.assertEquals("1a1dc91c907325c69271ddf0c944bc72", dao.getUserPass(users.get(0)));
+    }
+
+    @Test
     void testGroupUpdate() throws DaoWrapperException {
         var group = new GoodGroup("1", "desc");
         dao.createGroup(group);

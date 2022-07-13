@@ -99,21 +99,19 @@ public class DBService implements Dao {
                                  """)
             ) {
                 var result1 = "Good_groups table creation result: % d".formatted(createGoodGroupsTable.executeUpdate());
-                LOGGER.log(Level.INFO, result1);
                 var result2 = "Good_groups table creation result: % d".formatted(createGoodsTable.executeUpdate());
-                LOGGER.log(Level.INFO, result2);
                 createUserTable.executeUpdate();
                 con.commit();
                 try (PreparedStatement insertRootUser =
                              con.prepareStatement(""" 
-                                     INSERT INTO users (username, password) VALUES(ee11cbb19052e40b07aac0ca060c23ee, 1a1dc91c907325c69271ddf0c944bc72);
+                                     INSERT OR IGNORE INTO users (username, password) VALUES("ee11cbb19052e40b07aac0ca060c23ee", "1a1dc91c907325c69271ddf0c944bc72");
                                      """)) {
                     insertRootUser.executeUpdate();
                 }
                 con.commit();
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, BAD_SQL_WARNING);
+            LOGGER.log(Level.SEVERE, e.getMessage());
             try {
                 con.rollback();
             } catch (SQLException ex) {
@@ -180,7 +178,6 @@ public class DBService implements Dao {
             insert.setString(3, good.getDescription());
             insert.setString(4, good.getProducer());
             insert.setInt(5, good.getAmount());
-            LOGGER.log(Level.INFO, "" + good.getAmount());
             insert.setDouble(6, good.getPrice());
             result = insert.executeUpdate();
             con.commit();
