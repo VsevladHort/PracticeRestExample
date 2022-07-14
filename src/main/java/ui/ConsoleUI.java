@@ -69,7 +69,27 @@ public class ConsoleUI {
         }
     }
 
-    private void searchForGooDialogue() {
+    private void searchForGooDialogue() throws IOException, NoSuchAlgorithmException {
+        boolean thisMenu = true;
+        while (thisMenu) {
+            System.out.print("Enter name of the good: ");
+            String name = scanner.nextLine();
+            if (name.isEmpty()) {
+                System.out.println("Empty names are forbidden");
+                continue;
+            }
+            Good good = client.getGood(name);
+            if (good != null) {
+                System.out.println("Success! The good: ");
+                System.out.println(good);
+            } else {
+                System.out.println("Good by this name was not found!");
+            }
+            System.out.print("Try searching again?(Y/N): ");
+            String yn = scanner.nextLine();
+            if (yn.equals("N"))
+                thisMenu = false;
+        }
     }
 
     private void totalValueOfGoodDialogue() throws IOException, NoSuchAlgorithmException {
@@ -77,12 +97,12 @@ public class ConsoleUI {
         while (thisMenu) {
             List<Good> list = client.getGoods(Integer.MAX_VALUE);
             if (list.isEmpty()) {
-                System.out.println("There are no goods to delete!");
+                System.out.println("There are no goods to display the total price of!");
                 return;
             }
             for (int i = 0; i < list.size(); i++)
                 System.out.println("" + i + ". " + list.get(i));
-            System.out.print("Enter index of the good to delete: ");
+            System.out.print("Enter index of the good to display the total price of: ");
             int index;
             String integer = scanner.nextLine();
             try {
