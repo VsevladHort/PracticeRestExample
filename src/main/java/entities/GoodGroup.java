@@ -57,4 +57,12 @@ public class GoodGroup implements Comparable<GoodGroup> {
     public int compareTo(GoodGroup o) {
         return name.compareTo(o.getName());
     }
+
+    @Override
+    public String toString() {
+        return "GoodGroup{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

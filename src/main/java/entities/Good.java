@@ -93,4 +93,15 @@ public final class Good implements Comparable<Good> {
     public int compareTo(Good o) {
         return name.compareTo(o.getName());
     }
+
+    @Override
+    public String toString() {
+        return "Good{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", producer='" + producer + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
 }
