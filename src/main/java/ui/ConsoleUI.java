@@ -58,7 +58,8 @@ public class ConsoleUI {
                     To display all goods press 4,
                     To display the total price of all goods of a given type 5,
                     To search for good press 6,                                       
-                    To go back press 7:                                              
+                    To change amount of good press 7,                                       
+                    To go back press 8:                                              
                     """);
             String choice = scanner.nextLine();
             switch (choice) {
@@ -68,8 +69,61 @@ public class ConsoleUI {
                 case "4" -> displayGoodsDialogue();
                 case "5" -> totalValueOfGoodDialogue();
                 case "6" -> searchForGooDialogue();
-                case "7" -> thisMenu = false;
+                case "7" -> changeAmountDialogue();
+                case "8" -> thisMenu = false;
                 default -> System.out.println("Illegal choice was maid");
+            }
+        }
+    }
+
+    private void changeAmountDialogue() throws IOException, NoSuchAlgorithmException {
+        boolean thisMenu = true;
+        while (thisMenu) {
+            List<Good> list = client.getGoods(Integer.MAX_VALUE);
+            if (list.isEmpty()) {
+                System.out.println("There are no goods to edit!");
+                return;
+            }
+            for (int i = 0; i < list.size(); i++)
+                System.out.println("" + i + ". " + list.get(i));
+            System.out.print("Enter index of the good to edit: ");
+            int index;
+            String integer = scanner.nextLine();
+            try {
+                index = Integer.parseInt(integer);
+            } catch (NumberFormatException e) {
+                System.out.println("Illegal number format!");
+                continue;
+            }
+            if (index >= list.size() || index < 0) {
+                System.out.println("Illegal index value!");
+                continue;
+            }
+            Good good = list.get(index);
+            System.out.print("Enter a number by how much to change the amount of good in the system: ");
+            int amount;
+            String amountStr = scanner.nextLine();
+            try {
+                amount = Integer.parseInt(amountStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Illegal number format!");
+                continue;
+            }
+            int resultingAmount = good.getAmount() + amount;
+            if (resultingAmount < 0) {
+                System.out.println("Resulting amount is illegal!");
+                continue;
+            }
+            good.setAmount(good.getAmount() + amount);
+            if (client.updateGood(good)) {
+                System.out.println("Successfully edited a good!");
+                thisMenu = false;
+            } else {
+                System.out.println("Good was not edited =( The resulting amount may have been illegal");
+                System.out.print("Try editing a good again?(Y/N): ");
+                String yn = scanner.nextLine();
+                if (yn.equals("N"))
+                    thisMenu = false;
             }
         }
     }
