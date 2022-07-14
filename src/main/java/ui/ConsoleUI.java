@@ -2,7 +2,9 @@ package ui;
 
 import entities.Good;
 import entities.GoodGroup;
+import global_utils.Const;
 import rest_api.client.RestApiClient;
+import rest_api.server.RestHttpsServer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -19,8 +21,11 @@ public class ConsoleUI {
         scanner = new Scanner(System.in);
     }
 
-    public static void main(String... args) {
-
+    public static void main(String... args) throws IOException, NoSuchAlgorithmException {
+        ConsoleUI consoleUI = new ConsoleUI();
+        RestHttpsServer restHttpsServer = new RestHttpsServer(Const.MAIN_DB);
+        restHttpsServer.start();
+        consoleUI.runClient();
     }
 
     public void runClient() throws IOException, NoSuchAlgorithmException {
@@ -50,8 +55,8 @@ public class ConsoleUI {
                     To create a good press 1,
                     To edit a good press 2,
                     To delete a good press 3,
-                    To display all groups press 4,
-                    To display the price of all goods within a group press 5,
+                    To display all goods press 4,
+                    To display the total price of all goods of a given type 5,
                     To search for good press 6,                                       
                     To go back press 7:                                              
                     """);
@@ -212,7 +217,7 @@ public class ConsoleUI {
                 System.out.println("Illegal price value!");
                 continue;
             }
-            System.out.print("Enter price of the good: ");
+            System.out.print("Enter amount of the good: ");
             int amount;
             String amountStr = scanner.nextLine();
             try {
@@ -289,7 +294,7 @@ public class ConsoleUI {
                 System.out.println("Illegal price value!");
                 continue;
             }
-            System.out.print("Enter price of the good: ");
+            System.out.print("Enter amount of the good: ");
             int amount;
             String amountStr = scanner.nextLine();
             try {

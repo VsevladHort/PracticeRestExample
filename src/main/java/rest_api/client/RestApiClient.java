@@ -72,10 +72,13 @@ public class RestApiClient {
         con1.setRequestMethod("PUT");
         con1.setRequestProperty("Auth", getAuthorization());
         con1.getOutputStream().write(GoodJsonConverter.toJson(group).getBytes(StandardCharsets.UTF_8));
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
-        String json = new String(bufferedInputStream.readAllBytes());
-        con1.disconnect();
-        return json.equals(group.getName());
+        if (con1.getResponseCode() == 201) {
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
+            String json = new String(bufferedInputStream.readAllBytes());
+            con1.disconnect();
+            return json.equals(group.getName());
+        }
+        return false;
     }
 
     public List<Good> getGoods(String groupName, int limit) throws IOException, NoSuchAlgorithmException {
@@ -109,12 +112,15 @@ public class RestApiClient {
         con1.setRequestProperty("Limit", String.valueOf(Integer.MAX_VALUE));
         con1.setRequestProperty("Group", "");
         con1.setRequestProperty("Auth", getAuthorization());
-        String response = new String(con1.getInputStream().readAllBytes());
-        var result = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
-                .map(GoodJsonConverter::fromJsonGood).sorted().collect(Collectors.toList());
-        if (result.isEmpty())
+        if (con1.getResponseCode() == 200) {
+            String response = new String(con1.getInputStream().readAllBytes());
+            var result = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
+                    .map(GoodJsonConverter::fromJsonGood).sorted().collect(Collectors.toList());
+            if (result.isEmpty())
+                return null;
+            return result.get(0);
+        } else
             return null;
-        return result.get(0);
     }
 
     public boolean addGood(String groupName, Good good) throws IOException, NoSuchAlgorithmException {
@@ -124,10 +130,13 @@ public class RestApiClient {
         con1.setRequestMethod("PUT");
         con1.setRequestProperty("Auth", getAuthorization());
         con1.getOutputStream().write(GoodJsonConverter.toJson(good, groupName).getBytes(StandardCharsets.UTF_8));
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
-        String json = new String(bufferedInputStream.readAllBytes());
-        con1.disconnect();
-        return good.getName().equals(json);
+        if (con1.getResponseCode() == 201) {
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
+            String json = new String(bufferedInputStream.readAllBytes());
+            con1.disconnect();
+            return good.getName().equals(json);
+        }
+        return false;
     }
 
     public boolean deleteGood(String name) throws IOException, NoSuchAlgorithmException {
@@ -156,6 +165,7 @@ public class RestApiClient {
         URL url = new URL("https://localhost:1337/shutdown");
         HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestMethod("GET");
+        System.out.println(con.getResponseCode());
     }
 
     private String getAuthorization() throws IOException, NoSuchAlgorithmException {

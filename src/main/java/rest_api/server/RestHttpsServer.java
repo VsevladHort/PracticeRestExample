@@ -226,13 +226,16 @@ public class RestHttpsServer {
                     }
                     GoodGroup group = new GoodGroup(name, desc);
                     try {
-                        dao.createGroup(group);
+                        if (dao.createGroup(group)) {
+                            byte[] value = group.getName().getBytes(StandardCharsets.UTF_8);
+                            exchange.sendResponseHeaders(201, value.length);
+                            exchange.getResponseBody().write(value);
+                        } else
+                            exchange.sendResponseHeaders(409, -1);
                     } catch (DaoWrapperException e) {
                         exchange.sendResponseHeaders(500, -1);
                     }
-                    byte[] value = group.getName().getBytes(StandardCharsets.UTF_8);
-                    exchange.sendResponseHeaders(201, value.length);
-                    exchange.getResponseBody().write(value);
+
                 }
                 case "DELETE" -> {
                     if (dangle.isEmpty()) {
@@ -355,13 +358,16 @@ public class RestHttpsServer {
                             exchange.sendResponseHeaders(404, -1);
                             return;
                         }
-                        dao.createGood(group, good);
+                        if (dao.createGood(group, good)) {
+                            byte[] value = good.getName().getBytes(StandardCharsets.UTF_8);
+                            exchange.sendResponseHeaders(201, value.length);
+                            exchange.getResponseBody().write(value);
+                        } else {
+                            exchange.sendResponseHeaders(409, -1);
+                        }
                     } catch (DaoWrapperException e) {
                         exchange.sendResponseHeaders(500, -1);
                     }
-                    byte[] value = good.getName().getBytes(StandardCharsets.UTF_8);
-                    exchange.sendResponseHeaders(201, value.length);
-                    exchange.getResponseBody().write(value);
                 }
                 case "DELETE" -> {
                     if (dangle.isEmpty()) {
