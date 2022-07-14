@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 class DaoTest {
-    private static final String TEST_DB = "test";
+    private static final String TEST_DB = "test1";
     private static Dao dao;
 
     @BeforeAll
@@ -55,11 +55,17 @@ class DaoTest {
     @Test
     void testGroupDelete() throws DaoWrapperException {
         var group = new GoodGroup("1", "desc");
+        var good = new Good("1");
+        var good1 = new Good("2");
         dao.createGroup(group);
+        dao.createGood("1", good);
+        dao.createGood("1", good1);
         group.setDescription("NewDesc");
         dao.deleteGoodGroup(group.getName());
         var gottenGroup = dao.getGroup("1");
         Assertions.assertNull(gottenGroup);
+        Assertions.assertNull(dao.getGood("1"));
+        Assertions.assertNull(dao.getGood("2"));
     }
 
     @Test

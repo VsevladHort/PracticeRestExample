@@ -17,14 +17,15 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Locale;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class HttpTests {
     private static RestHttpsServer server;
 
     @BeforeAll
     static void beforeAll() {
-        server = new RestHttpsServer();
+        server = new RestHttpsServer("test");
         server.start();
     }
 
@@ -72,7 +73,253 @@ class HttpTests {
         HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", getAuthorization());
-        Assertions.assertEquals(404, con1.getResponseCode());
+        Assertions.assertEquals(400, con1.getResponseCode());
+    }
+
+    @Test
+    void getListOfAllGoods() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        Good good11 = new Good("11");
+        Good good12 = new Good("12");
+        Good good21 = new Good("21");
+        Good good22 = new Good("22");
+        Good good31 = new Good("31");
+        Good good32 = new Good("32");
+        List<Good> expectedGoods = new ArrayList<>();
+        expectedGoods.add(good11);
+        expectedGoods.add(good12);
+        dao.createGood("1", good11);
+        dao.createGood("1", good12);
+        expectedGoods.add(good21);
+        expectedGoods.add(good22);
+        dao.createGood("2", good21);
+        dao.createGood("2", good22);
+        expectedGoods.add(good31);
+        expectedGoods.add(good32);
+        dao.createGood("3", good31);
+        dao.createGood("3", good32);
+        expectedGoods.sort(Comparator.naturalOrder());
+        URL url1 = new URL("https://localhost:1337/api/good");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setRequestMethod("GET");
+        con1.setRequestProperty("Limit", String.valueOf(Integer.MAX_VALUE));
+        con1.setRequestProperty("Group", "");
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(200, con1.getResponseCode());
+        String response = new String(con1.getInputStream().readAllBytes());
+        var listOfGoodsReceived = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
+                .map(GoodJsonConverter::fromJsonGood).sorted().collect(Collectors.toList());
+        for (int i = 0; i < listOfGoodsReceived.size(); i++)
+            Assertions.assertEquals(expectedGoods.get(i), listOfGoodsReceived.get(i));
+    }
+
+    @Test
+    void getListOfGoodsForOneGroup() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        Good good11 = new Good("11");
+        Good good12 = new Good("12");
+        Good good21 = new Good("21");
+        Good good22 = new Good("22");
+        Good good31 = new Good("31");
+        Good good32 = new Good("32");
+        List<Good> expectedGoods = new ArrayList<>();
+        dao.createGood("1", good11);
+        dao.createGood("1", good12);
+        dao.createGood("2", good21);
+        dao.createGood("2", good22);
+        expectedGoods.add(good31);
+        expectedGoods.add(good32);
+        dao.createGood("3", good31);
+        dao.createGood("3", good32);
+        expectedGoods.sort(Comparator.naturalOrder());
+        URL url1 = new URL("https://localhost:1337/api/good");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setRequestMethod("GET");
+        con1.setRequestProperty("Limit", String.valueOf(Integer.MAX_VALUE));
+        con1.setRequestProperty("Group", "3");
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(200, con1.getResponseCode());
+        String response = new String(con1.getInputStream().readAllBytes());
+        var listOfGoodsReceived = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
+                .map(GoodJsonConverter::fromJsonGood).sorted().collect(Collectors.toList());
+        for (int i = 0; i < listOfGoodsReceived.size(); i++)
+            Assertions.assertEquals(expectedGoods.get(i), listOfGoodsReceived.get(i));
+    }
+
+    @Test
+    void getGroupTest() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        URL url1 = new URL("https://localhost:1337/api/group/3");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setRequestMethod("GET");
+        con1.setRequestProperty("Limit", String.valueOf(Integer.MAX_VALUE));
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(200, con1.getResponseCode());
+        String response = new String(con1.getInputStream().readAllBytes());
+        var listOfGoodsReceived = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
+                .map(GoodJsonConverter::fromJsonGroup).sorted().collect(Collectors.toList());
+        Assertions.assertEquals(goodGroup3, listOfGoodsReceived.get(0));
+    }
+
+    @Test
+    void updateGroupTest() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        URL url1 = new URL("https://localhost:1337/api/group/");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setDoOutput(true);
+        con1.setRequestMethod("POST");
+        con1.setRequestProperty("Auth", getAuthorization());
+        goodGroup3.setDescription("desc");
+        con1.getOutputStream().write(GoodJsonConverter.toJson(goodGroup3).getBytes(StandardCharsets.UTF_8));
+        Assertions.assertEquals(204, con1.getResponseCode());
+        Assertions.assertEquals("desc", dao.getGroup("3").getDescription());
+    }
+
+    @Test
+    void deleteGroupTest() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        Good good32 = new Good("32");
+        dao.createGood("3", good32);
+        URL url1 = new URL("https://localhost:1337/api/group/3");
+        Assertions.assertNotNull(dao.getGood("32"));
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setRequestMethod("DELETE");
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(204, con1.getResponseCode());
+        Assertions.assertNull(dao.getGroup("3"));
+        Assertions.assertNull(dao.getGood("32"));
+    }
+
+    @Test
+    void getListOfAllGoodGroups() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        GoodGroup goodGroup1 = new GoodGroup("1", "1");
+        GoodGroup goodGroup2 = new GoodGroup("2", "2");
+        GoodGroup goodGroup3 = new GoodGroup("3", "3");
+        List<GoodGroup> expectedGroups = new ArrayList<>();
+        expectedGroups.add(goodGroup1);
+        expectedGroups.add(goodGroup2);
+        expectedGroups.add(goodGroup3);
+        expectedGroups.sort(Comparator.naturalOrder());
+        expectedGroups.forEach(it -> {
+            try {
+                dao.createGroup(it);
+            } catch (DaoWrapperException e) {
+                e.printStackTrace();
+            }
+        });
+        Good good11 = new Good("11");
+        Good good12 = new Good("12");
+        Good good21 = new Good("21");
+        Good good22 = new Good("22");
+        Good good31 = new Good("31");
+        Good good32 = new Good("32");
+        List<Good> expectedGoods = new ArrayList<>();
+        expectedGoods.add(good11);
+        expectedGoods.add(good12);
+        dao.createGood("1", good11);
+        dao.createGood("1", good12);
+        expectedGoods.add(good21);
+        expectedGoods.add(good22);
+        dao.createGood("2", good21);
+        dao.createGood("2", good22);
+        expectedGoods.add(good31);
+        expectedGoods.add(good32);
+        dao.createGood("3", good31);
+        dao.createGood("3", good32);
+        expectedGoods.sort(Comparator.naturalOrder());
+        URL url1 = new URL("https://localhost:1337/api/group");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setRequestMethod("GET");
+        con1.setRequestProperty("Limit", String.valueOf(Integer.MAX_VALUE));
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(200, con1.getResponseCode());
+        String response = new String(con1.getInputStream().readAllBytes());
+        var listOfGoodsReceived = Arrays.stream(response.split(";;;")).filter(it -> !it.isEmpty())
+                .map(GoodJsonConverter::fromJsonGroup).sorted().collect(Collectors.toList());
+        for (int i = 0; i < listOfGoodsReceived.size(); i++)
+            Assertions.assertEquals(expectedGroups.get(i), listOfGoodsReceived.get(i));
     }
 
     @Test

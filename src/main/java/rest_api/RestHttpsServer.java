@@ -1,11 +1,15 @@
 package rest_api;
 
 import com.sun.net.httpserver.*;
+import dao.CriteriaGood;
+import dao.CriteriaGoodGroup;
 import dao.DBService;
 import dao.Dao;
 import dao.exceptions.DaoWrapperException;
 import entities.Good;
+import entities.GoodGroup;
 import entities.utils.GoodJsonConverter;
+import global_utils.Const;
 import org.json.JSONObject;
 import rest_api.utils.AuthToken;
 
@@ -22,6 +26,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
@@ -31,6 +36,7 @@ import java.util.stream.Collectors;
 
 public class RestHttpsServer {
     private static final Logger LOGGER = Logger.getLogger(DBService.class.getCanonicalName());
+    private final String dbName;
 //    private static final String USERNAME = "ee11cbb19052e40b07aac0ca060c23ee";
 //    private static final String PASSWORD = "1a1dc91c907325c69271ddf0c944bc72";
 
@@ -45,7 +51,7 @@ public class RestHttpsServer {
     }
 
     public static void main(String... args) {
-        RestHttpsServer restHttpServer = new RestHttpsServer();
+        RestHttpsServer restHttpServer = new RestHttpsServer(Const.MAIN_DB);
         restHttpServer.start();
     }
 
@@ -53,7 +59,8 @@ public class RestHttpsServer {
     HttpsServer server;
     ExecutorService executor;
 
-    public RestHttpsServer() {
+    public RestHttpsServer(String dbName) {
+        this.dbName = dbName;
         FileInputStream stream = null;
         try {
             byte[] b = new byte[16];
@@ -87,6 +94,7 @@ public class RestHttpsServer {
 
             HttpContext contextLogin = server.createContext("/login", new LoginHandler());
             HttpContext contextGood = server.createContext("/api/good", new GoodHandler());
+            HttpContext contextGroup = server.createContext("/api/group", new GroupHandler());
             server.createContext("/shutdown", new ShutdownHandler());
             contextLogin.setAuthenticator(new Auth());
             contextGood.setAuthenticator(new Auth());
@@ -124,13 +132,13 @@ public class RestHttpsServer {
             }
             var request = exchange.getRequestBody();
             try {
-                DBService.initializeConnection("test");
+                DBService.initializeConnection(dbName);
             } catch (DaoWrapperException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
             }
             Dao dao = null;
             try {
-                dao = new DBService("test");
+                dao = new DBService(dbName);
             } catch (DaoWrapperException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
             }
@@ -158,7 +166,124 @@ public class RestHttpsServer {
         }
     }
 
-    static class GoodHandler implements HttpHandler {
+    class GroupHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            var uri = exchange.getRequestURI().toString();
+            var index = uri.indexOf("/api/group") + "/api/group".length() + 1;
+            if (index >= uri.length())
+                uri = uri + '/';
+            var dangle = uri.substring(index);
+            Dao dao;
+            try {
+                DBService.initializeConnection(dbName);
+                dao = new DBService(dbName);
+            } catch (DaoWrapperException e) {
+                exchange.sendResponseHeaders(500, -1);
+                return;
+            }
+            switch (exchange.getRequestMethod()) {
+                case "GET" -> {
+                    if (dangle.isEmpty()) {
+                        int limit = Integer.parseInt(exchange.getRequestHeaders().getFirst("Limit"));
+                        try {
+                            List<GoodGroup> list = dao.getGroups(limit, CriteriaGoodGroup.NAME);
+                            StringBuilder builder = new StringBuilder();
+                            list.forEach(it -> builder.append(GoodJsonConverter.toJson(it)).append(";;;"));
+                            OutputStream os = exchange.getResponseBody();
+                            byte[] write = builder.toString().getBytes(StandardCharsets.UTF_8);
+                            exchange.sendResponseHeaders(200, write.length);
+                            os.write(write);
+                            os.close();
+                        } catch (DaoWrapperException e) {
+                            exchange.sendResponseHeaders(500, -1);
+                        }
+                    } else {
+                        try {
+                            GoodGroup good = dao.getGroup(dangle);
+                            if (good != null) {
+                                OutputStream os = exchange.getResponseBody();
+                                byte[] write = GoodJsonConverter.toJson(good).getBytes(StandardCharsets.UTF_8);
+                                exchange.sendResponseHeaders(200, write.length);
+                                os.write(write);
+                                os.close();
+                            } else {
+                                exchange.sendResponseHeaders(404, -1);
+                            }
+                        } catch (DaoWrapperException e) {
+                            exchange.sendResponseHeaders(500, -1);
+                        }
+                    }
+                }
+                case "PUT" -> {
+                    String putJson = new String(exchange.getRequestBody().readAllBytes());
+                    JSONObject jsonObject = new JSONObject(putJson);
+                    var name = jsonObject.getString("name");
+                    var desc = jsonObject.getString("description");
+                    if (name.isEmpty()) {
+                        exchange.sendResponseHeaders(409, -1);
+                        return;
+                    }
+                    GoodGroup group = new GoodGroup(name, desc);
+                    try {
+                        dao.createGroup(group);
+                    } catch (DaoWrapperException e) {
+                        exchange.sendResponseHeaders(500, -1);
+                    }
+                    byte[] value = group.getName().getBytes(StandardCharsets.UTF_8);
+                    exchange.sendResponseHeaders(201, value.length);
+                    exchange.getResponseBody().write(value);
+                }
+                case "DELETE" -> {
+                    if (dangle.isEmpty()) {
+                        exchange.sendResponseHeaders(404, -1);
+                    } else {
+                        try {
+                            if (dao.deleteGoodGroup(dangle)) {
+                                exchange.sendResponseHeaders(204, -1);
+                            } else {
+                                exchange.sendResponseHeaders(404, -1);
+                            }
+                        } catch (DaoWrapperException e) {
+                            exchange.sendResponseHeaders(500, -1);
+                        }
+                    }
+                }
+                case "POST" -> {
+                    if (dangle.isEmpty()) {
+                        exchange.sendResponseHeaders(404, -1);
+                        return;
+                    }
+                    String putJson = new String(exchange.getRequestBody().readAllBytes());
+                    JSONObject jsonObject = new JSONObject(putJson);
+                    var name = jsonObject.getString("name");
+                    var desc = jsonObject.getString("description");
+                    if (name.isEmpty()) {
+                        exchange.sendResponseHeaders(409, -1);
+                        return;
+                    }
+                    GoodGroup group;
+                    try {
+                        group = dao.getGroup(name);
+                    } catch (DaoWrapperException e) {
+                        exchange.sendResponseHeaders(404, -1);
+                        return;
+                    }
+                    group.setDescription(desc);
+                    try {
+                        dao.updateGroup(group);
+                    } catch (DaoWrapperException e) {
+                        exchange.sendResponseHeaders(500, -1);
+                        return;
+                    }
+                    exchange.sendResponseHeaders(204, -1);
+                }
+                default -> exchange.sendResponseHeaders(404, -1);
+            }
+        }
+    }
+
+    class GoodHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             var uri = exchange.getRequestURI().toString();
@@ -168,8 +293,8 @@ public class RestHttpsServer {
             var dangle = uri.substring(index);
             Dao dao;
             try {
-                DBService.initializeConnection("test");
-                dao = new DBService("test");
+                DBService.initializeConnection(dbName);
+                dao = new DBService(dbName);
             } catch (DaoWrapperException e) {
                 exchange.sendResponseHeaders(500, -1);
                 return;
@@ -177,7 +302,19 @@ public class RestHttpsServer {
             switch (exchange.getRequestMethod()) {
                 case "GET" -> {
                     if (dangle.isEmpty()) {
-                        exchange.sendResponseHeaders(404, -1);
+                        int limit = Integer.parseInt(exchange.getRequestHeaders().getFirst("Limit"));
+                        String group = exchange.getRequestHeaders().getFirst("Group");
+                        try {
+                            if (group.isEmpty()) {
+                                List<Good> list = dao.getGoods(limit, CriteriaGood.NAME);
+                                sendGoodList(exchange, list);
+                            } else {
+                                List<Good> list = dao.getGoods(group, limit, CriteriaGood.NAME);
+                                sendGoodList(exchange, list);
+                            }
+                        } catch (DaoWrapperException e) {
+                            exchange.sendResponseHeaders(500, -1);
+                        }
                     } else {
                         try {
                             Good good = dao.getGood(dangle);
@@ -278,6 +415,16 @@ public class RestHttpsServer {
                 }
                 default -> exchange.sendResponseHeaders(404, -1);
             }
+        }
+
+        private void sendGoodList(HttpExchange exchange, List<Good> list) throws IOException {
+            StringBuilder builder = new StringBuilder();
+            list.forEach(it -> builder.append(GoodJsonConverter.toJson(it)).append(";;;"));
+            OutputStream os = exchange.getResponseBody();
+            byte[] write = builder.toString().getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, write.length);
+            os.write(write);
+            os.close();
         }
     }
 

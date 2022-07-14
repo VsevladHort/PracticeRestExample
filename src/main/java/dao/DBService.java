@@ -3,6 +3,7 @@ package dao;
 import dao.exceptions.DaoWrapperException;
 import entities.Good;
 import entities.GoodGroup;
+import global_utils.Const;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,10 @@ public class DBService implements Dao {
         initialization(nameOfDb);
     }
 
+    public DBService() throws DaoWrapperException {
+        initialization(Const.MAIN_DB);
+    }
+
     /**
      * Has to be called before creating an instance of dao of this class
      */
@@ -37,6 +42,15 @@ public class DBService implements Dao {
                 Class.forName("org.sqlite.JDBC");
                 con = DriverManager.getConnection("jdbc:sqlite:" + name);
                 con.setAutoCommit(false);
+                try (PreparedStatement insertRootUser =
+                             con.prepareStatement(""" 
+                                     PRAGMA foreign_keys = ON;
+                                     """)) {
+                    insertRootUser.executeUpdate();
+                } catch (SQLException throwables) {
+                    LOGGER.log(Level.INFO, "Could not turn on foreign keys");
+                }
+                con.commit();
             } catch (ClassNotFoundException e) {
                 LOGGER.log(Level.SEVERE, "Не знайшли драйвер JDBC");
                 e.printStackTrace();
@@ -45,6 +59,10 @@ public class DBService implements Dao {
                 throw new DaoWrapperException(BAD_SQL_WARNING, e);
             }
         }
+    }
+
+    public static void initializeConnection() throws DaoWrapperException {
+        initializeConnection(Const.MAIN_DB);
     }
 
     public static Connection getConnection() {
@@ -693,9 +711,12 @@ public class DBService implements Dao {
         try (PreparedStatement select =
                      con.prepareStatement(
                              "DELETE FROM good_groups WHERE name = ?"
-                     )) {
+                     );
+             PreparedStatement forcedDelete = con.prepareStatement("DELETE FROM goods WHERE group_name = ?")) {
             select.setString(1, name);
+            forcedDelete.setString(1, name);
             var result = select.executeUpdate();
+            forcedDelete.executeUpdate();
             con.commit();
             return result != 0;
         } catch (SQLException e) {
