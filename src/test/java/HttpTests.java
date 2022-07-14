@@ -6,7 +6,7 @@ import entities.GoodGroup;
 import entities.utils.GoodJsonConverter;
 import jakarta.xml.bind.DatatypeConverter;
 import org.junit.jupiter.api.*;
-import rest_api.RestHttpsServer;
+import rest_api.server.RestHttpsServer;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedInputStream;
@@ -365,6 +365,28 @@ class HttpTests {
         Assertions.assertEquals(good.getProducer(), gottenGood.getProducer());
         Assertions.assertEquals(good.getDescription(), gottenGood.getDescription());
         Assertions.assertEquals(good.getPrice(), gottenGood.getPrice());
+        con1.disconnect();
+    }
+
+    @Test
+    void testCreateGroup() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        Good good = new Good("name", "desc", 10, "producer", 100);
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        var group = new GoodGroup("1", "1");
+        URL url1 = new URL("https://localhost:1337/api/group");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
+        con1.setDoOutput(true);
+        con1.setRequestMethod("PUT");
+        con1.setRequestProperty("Auth", getAuthorization());
+        con1.getOutputStream().write(GoodJsonConverter.toJson(group).getBytes(StandardCharsets.UTF_8));
+        Assertions.assertEquals(201, con1.getResponseCode());
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
+        String json = new String(bufferedInputStream.readAllBytes());
+        Assertions.assertEquals(group.getName(), json);
+        var gottenGood = dao.getGroup(json);
+        Assertions.assertEquals(group.getDescription(), gottenGood.getDescription());
+        Assertions.assertTrue(dao.createGood("1", good));
         con1.disconnect();
     }
 

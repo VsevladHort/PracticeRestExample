@@ -1,4 +1,4 @@
-package rest_api;
+package rest_api.server;
 
 import com.sun.net.httpserver.*;
 import dao.CriteriaGood;
