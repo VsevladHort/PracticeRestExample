@@ -11,8 +11,6 @@ import rest_api.RestHttpServer;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -100,6 +98,69 @@ class HttpTests {
     }
 
     @Test
+    void testCreateGoodPUT() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        Good good = new Good("name", "desc", 10, "producer", 100);
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        dao.createGroup(new GoodGroup("1", "1"));
+        URL url1 = new URL("http://localhost:1337/api/good");
+        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        con1.setDoOutput(true);
+        con1.setRequestMethod("PUT");
+        con1.setRequestProperty("Auth", getAuthorization());
+        con1.getOutputStream().write(GoodJsonConverter.toJson(good, "1").getBytes(StandardCharsets.UTF_8));
+        Assertions.assertEquals(201, con1.getResponseCode());
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
+        String json = new String(bufferedInputStream.readAllBytes());
+        Assertions.assertEquals(good.getName(), json);
+        var gottenGood = dao.getGood(json);
+        Assertions.assertEquals(good.getAmount(), gottenGood.getAmount());
+        Assertions.assertEquals(good.getProducer(), gottenGood.getProducer());
+        Assertions.assertEquals(good.getDescription(), gottenGood.getDescription());
+        Assertions.assertEquals(good.getPrice(), gottenGood.getPrice());
+        con1.disconnect();
+    }
+
+    @Test
+    void testUpdateGoodPOST() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        Good good = new Good("name", "desc", 10, "producer", 100);
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        dao.createGroup(new GoodGroup("1", "1"));
+        dao.createGood("1", good);
+        good.setPrice(100);
+        URL url1 = new URL("http://localhost:1337/api/good/name");
+        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        con1.setDoOutput(true);
+        con1.setRequestMethod("POST");
+        con1.setRequestProperty("Auth", getAuthorization());
+        con1.getOutputStream().write(GoodJsonConverter.toJson(good, "1").getBytes(StandardCharsets.UTF_8));
+        Assertions.assertEquals(204, con1.getResponseCode());
+        var gottenGood = dao.getGood("name");
+        Assertions.assertEquals(good.getAmount(), gottenGood.getAmount());
+        Assertions.assertEquals(good.getProducer(), gottenGood.getProducer());
+        Assertions.assertEquals(good.getDescription(), gottenGood.getDescription());
+        Assertions.assertEquals(good.getPrice(), gottenGood.getPrice());
+        con1.disconnect();
+    }
+
+    @Test
+    void testDeleteGoodDELETE() throws IOException, NoSuchAlgorithmException, DaoWrapperException {
+        Good good = new Good("name", "desc", 10, "producer", 100);
+        DBService.initializeConnection("test");
+        Dao dao = new DBService("test");
+        dao.createGroup(new GoodGroup("1", "1"));
+        dao.createGood("1", good);
+        URL url1 = new URL("http://localhost:1337/api/good/name");
+        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        con1.setRequestMethod("DELETE");
+        con1.setRequestProperty("Auth", getAuthorization());
+        Assertions.assertEquals(204, con1.getResponseCode());
+        Assertions.assertNull(dao.getGood("name"));
+        con1.disconnect();
+    }
+
+    @Test
     void testGetUnknownGood() throws IOException, NoSuchAlgorithmException {
         URL url1 = new URL("http://localhost:1337/api/good/1");
         HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
@@ -107,6 +168,7 @@ class HttpTests {
         con1.setRequestProperty("Auth", getAuthorization());
         Assertions.assertEquals(404, con1.getResponseCode());
     }
+
 
     private String getAuthorization() throws IOException, NoSuchAlgorithmException {
         URL url = new URL("http://localhost:1337/login");

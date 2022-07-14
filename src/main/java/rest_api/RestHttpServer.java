@@ -236,9 +236,7 @@ public class RestHttpServer {
                         exchange.sendResponseHeaders(500, -1);
                         return;
                     }
-                    byte[] value = good.getName().getBytes(StandardCharsets.UTF_8);
-                    exchange.sendResponseHeaders(201, value.length);
-                    exchange.getResponseBody().write(value);
+                    exchange.sendResponseHeaders(204, -1);
                 }
                 default -> exchange.sendResponseHeaders(404, -1);
             }
