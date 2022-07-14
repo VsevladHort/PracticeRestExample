@@ -9,11 +9,17 @@ import entities.utils.GoodJsonConverter;
 import org.json.JSONObject;
 import rest_api.utils.AuthToken;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.ExecutorService;
@@ -23,12 +29,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class RestHttpServer {
+public class RestHttpsServer {
     private static final Logger LOGGER = Logger.getLogger(DBService.class.getCanonicalName());
 //    private static final String USERNAME = "ee11cbb19052e40b07aac0ca060c23ee";
 //    private static final String PASSWORD = "1a1dc91c907325c69271ddf0c944bc72";
 
     static {
+        HttpsURLConnection.setDefaultHostnameVerifier(
+                (hostname, sslSession) -> hostname.equals("localhost"));
         try {
             LOGGER.addHandler(new FileHandler("logs/restserverlogs.txt"));
         } catch (IOException e) {
@@ -37,22 +45,45 @@ public class RestHttpServer {
     }
 
     public static void main(String... args) {
-        RestHttpServer restHttpServer = new RestHttpServer();
+        RestHttpsServer restHttpServer = new RestHttpsServer();
         restHttpServer.start();
     }
 
     private AuthToken jwtUtils;
-    HttpServer server;
+    HttpsServer server;
     ExecutorService executor;
 
-    public RestHttpServer() {
+    public RestHttpsServer() {
+        FileInputStream stream = null;
         try {
             byte[] b = new byte[16];
             new SecureRandom().nextBytes(b);
             byte[] encoded = Base64.getEncoder().encode(b);
             jwtUtils = new AuthToken(new String(encoded));
-            server = HttpServer.create();
-            server.bind(new InetSocketAddress(1337), 0);
+            SSLContext ssl = SSLContext.getInstance("TLS");
+            System.setProperty("javax.net.ssl.trustStore", "F:/keystore");
+            System.setProperty("javax.net.ssl.trustStorePassword", "password");
+
+            KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            KeyStore store = KeyStore.getInstance("JKS");
+
+            stream = new FileInputStream("F:/keystore");
+            store.load(stream, "password".toCharArray());
+
+            keyFactory.init(store, "password".toCharArray());
+
+
+            TrustManagerFactory trustFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+            trustFactory.init(store);
+
+            ssl.init(keyFactory.getKeyManagers(),
+                    trustFactory.getTrustManagers(), new SecureRandom());
+
+            HttpsConfigurator configurator = new HttpsConfigurator(ssl);
+            server = HttpsServer.create();
+            server.setHttpsConfigurator(configurator);
+            server.bind(new InetSocketAddress(1337), 20);
 
             HttpContext contextLogin = server.createContext("/login", new LoginHandler());
             HttpContext contextGood = server.createContext("/api/good", new GoodHandler());
@@ -62,8 +93,15 @@ public class RestHttpServer {
 
             executor = Executors.newFixedThreadPool(10);
             server.setExecutor(executor);
-        } catch (IOException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | CertificateException | UnrecoverableKeyException | KeyManagementException e) {
             LOGGER.log(Level.SEVERE, e.getMessage());
+        } finally {
+            try {
+                if (stream != null)
+                    stream.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage());
+            }
         }
     }
 

@@ -6,11 +6,11 @@ import entities.GoodGroup;
 import entities.utils.GoodJsonConverter;
 import jakarta.xml.bind.DatatypeConverter;
 import org.junit.jupiter.api.*;
-import rest_api.RestHttpServer;
+import rest_api.RestHttpsServer;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -20,18 +20,18 @@ import java.sql.SQLException;
 import java.util.Locale;
 
 class HttpTests {
-    private static RestHttpServer server;
+    private static RestHttpsServer server;
 
     @BeforeAll
     static void beforeAll() {
-        server = new RestHttpServer();
+        server = new RestHttpsServer();
         server.start();
     }
 
     @Test
     void testLoginSuccessful() throws IOException, NoSuchAlgorithmException {
-        URL url = new URL("http://localhost:1337/login");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        URL url = new URL("https://localhost:1337/login");
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
         StringBuilder request = new StringBuilder();
@@ -50,8 +50,8 @@ class HttpTests {
         String response = new String(bufferedInputStream.readAllBytes());
         Assertions.assertEquals(200, con.getResponseCode());
         con.disconnect();
-        URL url1 = new URL("http://localhost:1337/api/good/");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good/");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", response);
         System.out.println(con1.getResponseCode());
@@ -59,8 +59,8 @@ class HttpTests {
 
     @Test
     void unauthorizedTest() throws IOException {
-        URL url1 = new URL("http://localhost:1337/api/good/");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good/");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", "sdadfs");
         Assertions.assertEquals(403, con1.getResponseCode());
@@ -68,8 +68,8 @@ class HttpTests {
 
     @Test
     void authorizedTest() throws IOException, NoSuchAlgorithmException {
-        URL url1 = new URL("http://localhost:1337/api/good");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", getAuthorization());
         Assertions.assertEquals(404, con1.getResponseCode());
@@ -82,8 +82,8 @@ class HttpTests {
         Dao dao = new DBService("test");
         dao.createGroup(new GoodGroup("1", "1"));
         dao.createGood("1", good);
-        URL url1 = new URL("http://localhost:1337/api/good/name");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good/name");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", getAuthorization());
         BufferedInputStream bufferedInputStream = new BufferedInputStream(con1.getInputStream());
@@ -103,8 +103,8 @@ class HttpTests {
         DBService.initializeConnection("test");
         Dao dao = new DBService("test");
         dao.createGroup(new GoodGroup("1", "1"));
-        URL url1 = new URL("http://localhost:1337/api/good");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setDoOutput(true);
         con1.setRequestMethod("PUT");
         con1.setRequestProperty("Auth", getAuthorization());
@@ -129,8 +129,8 @@ class HttpTests {
         dao.createGroup(new GoodGroup("1", "1"));
         dao.createGood("1", good);
         good.setPrice(100);
-        URL url1 = new URL("http://localhost:1337/api/good/name");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good/name");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setDoOutput(true);
         con1.setRequestMethod("POST");
         con1.setRequestProperty("Auth", getAuthorization());
@@ -151,8 +151,8 @@ class HttpTests {
         Dao dao = new DBService("test");
         dao.createGroup(new GoodGroup("1", "1"));
         dao.createGood("1", good);
-        URL url1 = new URL("http://localhost:1337/api/good/name");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL("https://localhost:1337/api/good/name");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("DELETE");
         con1.setRequestProperty("Auth", getAuthorization());
         Assertions.assertEquals(204, con1.getResponseCode());
@@ -162,8 +162,8 @@ class HttpTests {
 
     @Test
     void testGetUnknownGood() throws IOException, NoSuchAlgorithmException {
-        URL url1 = new URL("http://localhost:1337/api/good/1");
-        HttpURLConnection con1 = (HttpURLConnection) url1.openConnection();
+        URL url1 = new URL(null, "https://localhost:1337/api/good/1");
+        HttpsURLConnection con1 = (HttpsURLConnection) url1.openConnection();
         con1.setRequestMethod("GET");
         con1.setRequestProperty("Auth", getAuthorization());
         Assertions.assertEquals(404, con1.getResponseCode());
@@ -171,8 +171,8 @@ class HttpTests {
 
 
     private String getAuthorization() throws IOException, NoSuchAlgorithmException {
-        URL url = new URL("http://localhost:1337/login");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        URL url = new URL("https://localhost:1337/login");
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
         StringBuilder request = new StringBuilder();
@@ -195,8 +195,8 @@ class HttpTests {
 
     @AfterAll
     static void afterAll() throws IOException {
-        URL url = new URL("http://localhost:1337/shutdown");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        URL url = new URL("https://localhost:1337/shutdown");
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         con.setRequestMethod("GET");
     }
 
