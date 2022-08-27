@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,8 +64,7 @@ public class RestHttpsServer {
         try {
             byte[] b = new byte[16];
             new SecureRandom().nextBytes(b);
-            byte[] encoded = Base64.getEncoder().encode(b);
-            jwtUtils = new AuthToken(new String(encoded));
+            jwtUtils = new AuthToken();
             SSLContext ssl = SSLContext.getInstance("TLS");
             System.setProperty("javax.net.ssl.trustStore", "F:/keystore");
             System.setProperty("javax.net.ssl.trustStorePassword", "password");

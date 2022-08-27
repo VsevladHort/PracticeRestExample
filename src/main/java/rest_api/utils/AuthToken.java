@@ -5,9 +5,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.xml.bind.DatatypeConverter;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.util.Date;
 
@@ -17,8 +15,7 @@ import java.util.Date;
 public class AuthToken {
     private static final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-    public AuthToken(String key) {
-        //this.key = key;
+    public AuthToken() {
     }
 
     //Sample method to construct a JWT

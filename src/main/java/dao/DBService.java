@@ -17,9 +17,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Practice 4
- */
 public class DBService implements Dao {
     private static Connection con;
     private static final Logger LOGGER = Logger.getLogger(DBService.class.getCanonicalName());
@@ -114,8 +111,8 @@ public class DBService implements Dao {
                                  );
                                  """)
             ) {
-                var result1 = "Good_groups table creation result: % d".formatted(createGoodGroupsTable.executeUpdate());
-                var result2 = "Good_groups table creation result: % d".formatted(createGoodsTable.executeUpdate());
+                createGoodGroupsTable.executeUpdate();
+                createGoodsTable.executeUpdate();
                 createUserTable.executeUpdate();
                 con.commit();
                 try (PreparedStatement insertRootUser =

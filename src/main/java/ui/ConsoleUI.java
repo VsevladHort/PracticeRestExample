@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ConsoleUI {
-    private RestApiClient client;
+    private final RestApiClient client;
     private boolean running = true;
-    private Scanner scanner;
+    private final Scanner scanner;
 
     public ConsoleUI() {
         client = new RestApiClient();
@@ -36,15 +36,15 @@ public class ConsoleUI {
                     To shutdown client and request server shutdown press 3: 
                     """);
             String choice = scanner.nextLine();
-            if (choice.equals("1")) {
-                workWithGroups();
-            } else if (choice.equals("2")) {
-                workWithGoods();
-            } else if (choice.equals("3")) {
-                running = false;
-                client.requestServerShutdown();
-            } else
-                System.out.println("Illegal choice was maid");
+            switch (choice) {
+                case "1" -> workWithGroups();
+                case "2" -> workWithGoods();
+                case "3" -> {
+                    running = false;
+                    client.requestServerShutdown();
+                }
+                default -> System.out.println("Illegal choice was maid");
+            }
         }
     }
 
